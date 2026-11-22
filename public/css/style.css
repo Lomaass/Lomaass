@@ -53,7 +53,7 @@ img {
 
 /* Header / Topbar */
 .topbar {
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
@@ -81,12 +81,13 @@ img {
   text-decoration: none;
   letter-spacing: -0.02em;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .brand::before {
   content: "";
-  width: 9px;
-  height: 22px;
+  width: 8px;
+  height: 20px;
   border-radius: 3px;
   background: var(--accent);
   display: inline-block;
@@ -97,14 +98,14 @@ img {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 #langToggle {
   font-weight: 600;
   letter-spacing: 0.03em;
-  min-width: 44px;
+  min-width: 46px;
   text-align: center;
 }
 
@@ -229,11 +230,11 @@ img {
 
 /* Buttons */
 .btn {
-  min-height: 40px;
-  padding: 8px 14px;
+  min-height: 38px;
+  padding: 8px 13px;
   border-radius: 8px;
   border: 1px solid transparent;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
@@ -269,12 +270,13 @@ img {
 }
 
 .btn-ghost {
-  background: transparent;
+  background: var(--bg);
+  border-color: transparent;
   color: var(--text);
 }
 
 .btn-ghost:hover {
-  background: var(--bg);
+  background: #e9edf3;
 }
 
 /* Cars Grid & Cards */
@@ -589,9 +591,8 @@ img {
   }
 }
 
-/* Mobile Breakpoint */
+/* Mobile Breakpoint (iPhone 14 & similar) */
 @media (max-width: 640px) {
-  /* Prevent automatic zoom on iOS when focusing inputs */
   .field input,
   .field select,
   .field textarea,
@@ -601,31 +602,35 @@ img {
   }
 
   .topbar-inner {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
+    flex-wrap: wrap;
+    row-gap: 8px;
     padding-block: 10px;
   }
 
   .brand {
-    justify-content: flex-start;
+    order: 1;
+    font-size: 0.98rem;
+  }
+
+  #langToggle {
+    order: 2;
+    min-height: 34px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
   }
 
   .nav-actions {
-    width: 100%;
-    justify-content: space-between;
-    gap: 6px;
+    order: 3;
+    flex: 1 1 100%;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
   }
 
   .nav-actions .btn {
-    flex: 1;
-    padding-inline: 8px;
+    min-height: 36px;
+    padding: 6px 12px;
     font-size: 0.82rem;
-  }
-
-  .nav-actions #langToggle {
-    flex: 0 0 auto;
-    min-width: 44px;
   }
 
   .filters-grid {
@@ -665,25 +670,5 @@ img {
   .footer-inner {
     flex-direction: column;
     align-items: flex-start;
-  }
-}
-
-/* Ultra-narrow screens (320px - 360px) */
-@media (max-width: 360px) {
-  .nav-actions {
-    flex-wrap: wrap;
-  }
-
-  .nav-actions .btn {
-    flex: 1 1 auto;
-  }
-
-  .car-footer {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .car-footer .btn {
-    width: 100%;
   }
 }
