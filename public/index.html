@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Western - Car Rental</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a href="#top" class="brand">Western - Car Rental</a>
+
+      <nav class="nav-actions">
+        <button type="button" class="btn btn-ghost" id="openTrackBtn" data-i18n="navTrack">ჯავშნის შემოწმება</button>
+        <button type="button" class="btn btn-ghost" id="openAdminBtn" data-i18n="navAdmin">ადმინი</button>
+        <button type="button" class="btn btn-outline" id="langToggle">EN</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top" class="container">
+    <section class="hero">
+      <p class="eyebrow" data-i18n="heroEyebrow">სანდო ავტოპარკი და გამჭვირვალე პირობები</p>
+      <h1 data-i18n="heroTitle">იქირავეთ ავტომობილი სწრაფად და მარტივად</h1>
+      <p class="hero-sub" data-i18n="heroSubtitle">
+        შეარჩიეთ სასურველი კლასი, გადაამოწმეთ თავისუფალი თარიღები და დაჯავშნეთ წუთებში.
+      </p>
+    </section>
+
+    <section class="filters-card">
+      <div class="filters-grid">
+        <div class="field">
+          <label for="filterCategory" data-i18n="filterCategory">კატეგორია</label>
+          <select id="filterCategory">
+            <option value="" data-i18n="allOption">ყველა</option>
+            <option value="Economy">Economy</option>
+            <option value="Sedan">Sedan</option>
+            <option value="Coupe">Coupe</option>
+            <option value="SUV">SUV</option>
+            <option value="Luxury">Luxury</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="filterTransmission" data-i18n="filterTransmission">გადაცემათა კოლოფი</label>
+          <select id="filterTransmission">
+            <option value="" data-i18n="allOption">ყველა</option>
+            <option value="Automatic">Automatic</option>
+            <option value="Manual">Manual</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="filterPickup" data-i18n="pickupDate">აყვანის თარიღი</label>
+          <input type="date" id="filterPickup" />
+        </div>
+
+        <div class="field">
+          <label for="filterDropoff" data-i18n="dropoffDate">დაბრუნების თარიღი</label>
+          <input type="date" id="filterDropoff" />
+        </div>
+
+        <div class="field">
+          <label for="filterMaxPrice" data-i18n="maxDailyPrice">მაქს. დღიური ფასი ($)</label>
+          <input type="number" id="filterMaxPrice" min="1" placeholder="120" />
+        </div>
+
+        <div class="field">
+          <label for="filterSearch" data-i18n="searchLabel">ძიება</label>
+          <input type="text" id="filterSearch" placeholder="BMW, Passat..." />
+        </div>
+      </div>
+
+      <div class="filters-footer">
+        <span id="carsCount" class="muted"></span>
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" id="resetFiltersBtn" data-i18n="resetFilters">გასუფთავება</button>
+          <button type="button" class="btn btn-primary" id="applyFiltersBtn" data-i18n="searchCars">მოძებნა</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div id="carsGrid" class="cars-grid"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span>Western - Car Rental</span>
+      <span class="muted" data-i18n="footerNote">პროფესიონალური ავტომობილების გაქირავების პლატფორმა</span>
+    </div>
+  </footer>
+
+  <!-- Booking Modal -->
+  <div class="modal-backdrop hidden" id="bookingModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="bookingModalTitle"></h2>
+        <button type="button" class="close-btn" data-close="bookingModal">&times;</button>
+      </div>
+      <form id="bookingForm" class="modal-body">
+        <input type="hidden" id="bookingCarId" />
+        <p id="bookingCarSummary" class="car-summary"></p>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="pickupDateInput" data-i18n="pickupDate">აყვანის თარიღი *</label>
+            <input type="date" id="pickupDateInput" required />
+          </div>
+          <div class="field">
+            <label for="dropoffDateInput" data-i18n="dropoffDate">დაბრუნების თარიღი *</label>
+            <input type="date" id="dropoffDateInput" required />
+          </div>
+          <div class="field">
+            <label for="pickupLocationInput" data-i18n="pickupLocation">აყვანის ლოკაცია *</label>
+            <input type="text" id="pickupLocationInput" required placeholder="თბილისი / აეროპორტი" />
+          </div>
+          <div class="field">
+            <label for="dropoffLocationInput" data-i18n="dropoffLocation">დაბრუნების ლოკაცია</label>
+            <input type="text" id="dropoffLocationInput" placeholder="იგივე ან სხვა ლოკაცია" />
+          </div>
+          <div class="field">
+            <label for="customerNameInput" data-i18n="fullName">სახელი და გვარი *</label>
+            <input type="text" id="customerNameInput" required />
+          </div>
+          <div class="field">
+            <label for="customerPhoneInput" data-i18n="phone">ტელეფონი *</label>
+            <input type="tel" id="customerPhoneInput" required placeholder="+995 5XX XX XX XX" />
+          </div>
+          <div class="field full-span">
+            <label for="customerEmailInput" data-i18n="email">ელ-ფოსტა *</label>
+            <input type="email" id="customerEmailInput" required placeholder="name@example.com" />
+          </div>
+          <div class="field full-span">
+            <label for="notesInput" data-i18n="notes">დამატებითი შენიშვნა</label>
+            <textarea id="notesInput" rows="2"></textarea>
+          </div>
+        </div>
+
+        <div class="price-preview" id="pricePreview"></div>
+        <div id="bookingMessage" class="feedback"></div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-close="bookingModal" data-i18n="cancel">გაუქმება</button>
+          <button type="submit" class="btn btn-primary" data-i18n="confirmBooking">დაჯავშნა</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Track Booking Modal -->
+  <div class="modal-backdrop hidden" id="trackModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 data-i18n="trackTitle">ჯავშნის კოდით გადამოწმება</h2>
+        <button type="button" class="close-btn" data-close="trackModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="track-row">
+          <input type="text" id="trackCodeInput" placeholder="WCR-XXXXXX" />
+          <button type="button" class="btn btn-primary" id="trackSearchBtn" data-i18n="checkBtn">შემოწმება</button>
+        </div>
+        <div id="trackResult" class="result-box"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Modal -->
+  <div class="modal-backdrop hidden" id="adminModal">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h2 data-i18n="adminTitle">Western - Car Rental — ადმინისტრირება</h2>
+        <button type="button" class="close-btn" data-close="adminModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="admin-auth">
+          <input type="password" id="adminKeyInput" placeholder="Admin Key" />
+          <button type="button" class="btn btn-primary" id="loadAdminBtn" data-i18n="loadBookings">ჯავშნების ჩატვირთვა</button>
+        </div>
+        <div id="adminMessage" class="feedback"></div>
+        <div id="adminBookingsList" class="admin-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
