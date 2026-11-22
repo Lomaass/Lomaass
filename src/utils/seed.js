@@ -78,7 +78,7 @@ const initialCars = [
   }
 ];
 
-function seed() {
+export function seed() {
   const existingCount = db.prepare('SELECT COUNT(*) AS count FROM cars').get().count;
 
   if (existingCount > 0) {
@@ -109,4 +109,10 @@ function seed() {
   }
 }
 
-seed();
+const isDirectRun =
+  Boolean(process.argv[1]) &&
+  import.meta.url === new URL(`file:///${process.argv[1].replace(/\\/g, '/')}`).href;
+
+if (isDirectRun) {
+  seed();
+}

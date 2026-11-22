@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { seed } from './src/utils/seed.js';
 
 import './src/config/db.js';
 import carRoutes from './src/routes/carRoutes.js';
@@ -29,6 +30,8 @@ app.use('/api/bookings', bookingRoutes);
 
 // Error Handler
 app.use(errorHandler);
+
+seed();
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
