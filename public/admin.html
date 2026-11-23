@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — Western - Car Rental</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --surface: #161920;
+      --surface-2: #1d222b;
+      --border: #2a303c;
+      --text: #e6e9ef;
+      --muted: #9aa3b2;
+      --accent: #d4d8e0;
+      --danger: #d97777;
+      --ok: #8cc29b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      line-height: 1.5;
+      padding: 28px 18px 60px;
+    }
+
+    .wrap {
+      max-width: 1160px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .auth-box {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    input, select, textarea, button {
+      font: inherit;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 8px 11px;
+      font-size: 0.9rem;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    button {
+      cursor: pointer;
+      background: var(--surface-2);
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    button:hover {
+      background: #252b37;
+      border-color: #3d4657;
+    }
+
+    button.primary {
+      background: #e6e9ef;
+      color: #0f1115;
+      border-color: #e6e9ef;
+      font-weight: 600;
+    }
+
+    button.primary:hover {
+      background: #cfd4de;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.35fr 0.95fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 920px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+
+    .status.confirmed { color: var(--ok); border-color: #3b5944; }
+    .status.pending { color: #d8c38a; border-color: #5c5234; }
+    .status.cancelled { color: var(--danger); border-color: #5e3838; }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 0.78rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .msg {
+      margin-top: 12px;
+      font-size: 0.86rem;
+      min-height: 20px;
+    }
+
+    .msg.ok { color: var(--ok); }
+    .msg.err { color: var(--danger); }
+
+    .car-list {
+      margin-top: 20px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .car-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface-2);
+      font-size: 0.86rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Western - Car Rental — Admin</h1>
+        <div class="sub">ჯავშნების დადასტურება და ავტომობილების მართვა</div>
+      </div>
+      <div class="auth-box">
+        <input id="adminSecret" type="password" placeholder="Admin Token / Password" />
+        <button id="saveAuthBtn" class="primary" type="button">შესვლა</button>
+        <button id="refreshBtn" type="button">განახლება</button>
+      </div>
+    </header>
+
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title">ჯავშნები</div>
+          <select id="statusFilter">
+            <option value="">ყველა სტატუსი</option>
+            <option value="pending">pending</option>
+            <option value="confirmed">confirmed</option>
+            <option value="active">active</option>
+            <option value="completed">completed</option>
+            <option value="cancelled">cancelled</option>
+          </select>
+        </div>
+
+        <div id="bookingsMsg" class="msg"></div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>კოდი / ავტო</th>
+                <th>კლიენტი</th>
+                <th>თარიღები / ფასი</th>
+                <th>სტატუსი</th>
+              </tr>
+            </thead>
+            <tbody id="bookingsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title">ახალი ავტომობილის დამატება</div>
+        </div>
+
+        <form id="addCarForm" class="form-grid">
+          <div>
+            <label for="brand">ბრენდი *</label>
+            <input id="brand" name="brand" required placeholder="BMW" />
+          </div>
+          <div>
+            <label for="model">მოდელი *</label>
+            <input id="model" name="model" required placeholder="520i M Sport" />
+          </div>
+          <div>
+            <label for="year">წელი *</label>
+            <input id="year" name="year" type="number" required value="2022" />
+          </div>
+          <div>
+            <label for="category">კატეგორია *</label>
+            <select id="category" name="category" required>
+              <option value="Sedan">Sedan</option>
+              <option value="SUV">SUV</option>
+              <option value="Coupe">Coupe</option>
+              <option value="Luxury">Luxury</option>
+              <option value="Economy">Economy</option>
+            </select>
+          </div>
+          <div>
+            <label for="transmission">გადაცემა *</label>
+            <select id="transmission" name="transmission" required>
+              <option value="Automatic">Automatic</option>
+              <option value="Manual">Manual</option>
+            </select>
+          </div>
+          <div>
+            <label for="fuel_type">საწვავი *</label>
+            <select id="fuel_type" name="fuel_type" required>
+              <option value="Petrol">Petrol</option>
+              <option value="Diesel">Diesel</option>
+              <option value="Hybrid">Hybrid</option>
+              <option value="Electric">Electric</option>
+            </select>
+          </div>
+          <div>
+            <label for="seats">ადგილები *</label>
+            <input id="seats" name="seats" type="number" required value="5" />
+          </div>
+          <div>
+            <label for="daily_price">დღიური ფასი ($) *</label>
+            <input id="daily_price" name="daily_price" type="number" step="0.01" required placeholder="75" />
+          </div>
+          <div>
+            <label for="deposit">დეპოზიტი ($)</label>
+            <input id="deposit" name="deposit" type="number" step="0.01" value="0" />
+          </div>
+          <div>
+            <label for="image_url">სურათის URL *</label>
+            <input id="image_url" name="image_url" required placeholder="/images/car.jpg" />
+          </div>
+          <div class="full">
+            <label for="description_ka">აღწერა (ქართულად)</label>
+            <textarea id="description_ka" name="description_ka" rows="2"></textarea>
+          </div>
+          <div class="full">
+            <label for="description_en">Description (English)</label>
+            <textarea id="description_en" name="description_en" rows="2"></textarea>
+          </div>
+          <div class="full">
+            <button type="submit" class="primary" style="width:100%;">ავტომობილის დამატება</button>
+          </div>
+        </form>
+
+        <div id="carMsg" class="msg"></div>
+
+        <div class="car-list" id="carsList"></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'wcr_admin_secret';
+    const secretInput = document.getElementById('adminSecret');
+    const saveAuthBtn = document.getElementById('saveAuthBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const statusFilter = document.getElementById('statusFilter');
+    const bookingsBody = document.getElementById('bookingsBody');
+    const bookingsMsg = document.getElementById('bookingsMsg');
+    const addCarForm = document.getElementById('addCarForm');
+    const carMsg = document.getElementById('carMsg');
+    const carsList = document.getElementById('carsList');
+
+    secretInput.value = sessionStorage.getItem(STORAGE_KEY) || '';
+
+    function getHeaders(json = false) {
+      const token = secretInput.value.trim();
+      const headers = {};
+      if (json) headers['Content-Type'] = 'application/json';
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        headers['x-admin-token'] = token;
+        headers['x-admin-key'] = token;
+      }
+      return headers;
+    }
+
+    function setMsg(el, text, isErr = false) {
+      el.textContent = text;
+      el.className = `msg ${isErr ? 'err' : 'ok'}`;
+    }
+
+    async function loadBookings() {
+      const status = statusFilter.value;
+      const url = status ? `/api/bookings?status=${encodeURIComponent(status)}` : '/api/bookings';
+      try {
+        const res = await fetch(url, { headers: getHeaders() });
+        const data = await res.json();
+        if (!res.ok) {
+          bookingsBody.innerHTML = '';
+          setMsg(bookingsMsg, data.message || `შეცდომა (${res.status})`, true);
+          return;
+        }
+        setMsg(bookingsMsg, `სულ ჯავშანი: ${data.count ?? (data.data?.length || 0)}`);
+        renderBookings(data.data || []);
+      } catch (err) {
+        setMsg(bookingsMsg, err.message, true);
+      }
+    }
+
+    function renderBookings(rows) {
+      if (!rows.length) {
+        bookingsBody.innerHTML = '<tr><td colspan="4" class="sub">ჯავშნები არ მოიძებნა</td></tr>';
+        return;
+      }
+
+      bookingsBody.innerHTML = rows.map((b) => `
+        <tr>
+          <td>
+            <strong>${b.booking_code || '#' + b.id}</strong><br />
+            <span class="sub">${b.brand || ''} ${b.model || ''} (${b.year || ''})</span>
+          </td>
+          <td>
+            ${b.customer_name}<br />
+            <span class="sub">${b.customer_phone}</span><br />
+            <span class="sub">${b.customer_email}</span>
+          </td>
+          <td>
+            ${b.pickup_date} → ${b.dropoff_date}<br />
+            <span class="sub">${b.total_days} დღე · $${b.total_price}</span>
+          </td>
+          <td>
+            <span class="status ${b.status}">${b.status}</span>
+            <div class="actions">
+              <button class="btn-sm" onclick="updateStatus(${b.id}, 'confirmed')">დადასტურება</button>
+              <button class="btn-sm" onclick="updateStatus(${b.id}, 'completed')">დასრულება</button>
+              <button class="btn-sm" onclick="updateStatus(${b.id}, 'cancelled')">გაუქმება</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    window.updateStatus = async function(id, status) {
+      try {
+        const res = await fetch(`/api/bookings/${id}/status`, {
+          method: 'PATCH',
+          headers: getHeaders(true),
+          body: JSON.stringify({ status })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setMsg(bookingsMsg, data.message || `სტატუსი ვერ განახლდა (${res.status})`, true);
+          return;
+        }
+        setMsg(bookingsMsg, `ჯავშანი #${id} განახლდა: ${status}`);
+        loadBookings();
+      } catch (err) {
+        setMsg(bookingsMsg, err.message, true);
+      }
+    };
+
+    async function loadCars() {
+      try {
+        const res = await fetch('/api/cars');
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.data || []);
+        carsList.innerHTML = list.map((c) => `
+          <div class="car-row">
+            <div>
+              <strong>${c.brand} ${c.model}</strong> <span class="sub">(${c.year}, ${c.category})</span>
+            </div>
+            <div class="sub">$${c.daily_price}/დღე</div>
+          </div>
+        `).join('');
+      } catch (_) {}
+    }
+
+    addCarForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(addCarForm);
+      const payload = Object.fromEntries(fd.entries());
+      payload.year = Number(payload.year);
+      payload.seats = Number(payload.seats);
+      payload.daily_price = Number(payload.daily_price);
+      payload.deposit = Number(payload.deposit || 0);
+
+      try {
+        const res = await fetch('/api/cars', {
+          method: 'POST',
+          headers: getHeaders(true),
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setMsg(carMsg, data.message || `ავტომობილი ვერ დაემატა (${res.status})`, true);
+          return;
+        }
+        setMsg(carMsg, 'ავტომობილი წარმატებით დაემატა');
+        addCarForm.reset();
+        loadCars();
+      } catch (err) {
+        setMsg(carMsg, err.message, true);
+      }
+    });
+
+    saveAuthBtn.addEventListener('click', () => {
+      sessionStorage.setItem(STORAGE_KEY, secretInput.value.trim());
+      loadBookings();
+      loadCars();
+    });
+
+    refreshBtn.addEventListener('click', () => {
+      loadBookings();
+      loadCars();
+    });
+
+    statusFilter.addEventListener('change', loadBookings);
+
+    loadCars();
+    if (secretInput.value) loadBookings();
+  </script>
+</body>
+</html>
