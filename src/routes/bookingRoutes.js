@@ -6,6 +6,7 @@ import {
   changeStatus
 } from '../controllers/bookingController.js';
 import { requireAdmin } from '../middleware/errorHandler.js';
+import uploadRoutes from './src/routes/uploadRoutes.js';
 
 const router = Router();
 

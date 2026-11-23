@@ -4,6 +4,7 @@ import cors from 'cors';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { seed } from './src/utils/seed.js';
+import uploadRoutes from './src/routes/uploadRoutes.js';
 
 import './src/config/db.js';
 import carRoutes from './src/routes/carRoutes.js';
@@ -27,6 +28,17 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/cars', carRoutes);
 app.use('/api/bookings', bookingRoutes);
+
+
+// API Routes
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.use('/api/upload', uploadRoutes);
+app.use('/api/cars', carRoutes);
+app.use('/api/bookings', bookingRoutes);
+
 
 // Error Handler
 app.use(errorHandler);
