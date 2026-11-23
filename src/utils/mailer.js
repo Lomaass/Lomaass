@@ -17,7 +17,10 @@ function createTransporter() {
     auth: {
       user,
       pass
-    }
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000
   });
 }
 
@@ -99,7 +102,7 @@ export async function sendBookingConfirmationEmail(booking, car) {
     </div>
   `;
 
-  await transporter.sendMail({
+  const info = await transporter.sendMail({
     from,
     to,
     subject,
@@ -107,5 +110,10 @@ export async function sendBookingConfirmationEmail(booking, car) {
     html
   });
 
-  return { sent: true };
+  console.log('Booking confirmation email sent:', {
+    messageId: info.messageId,
+    to
+  });
+
+  return { sent: true, messageId: info.messageId };
 }

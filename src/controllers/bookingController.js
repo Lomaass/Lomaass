@@ -10,7 +10,11 @@ export async function create(req, res, next) {
       const mailResult = await sendBookingConfirmationEmail(booking, car);
       emailSent = Boolean(mailResult?.sent);
     } catch (mailErr) {
-      console.error('Booking confirmation email failed:', mailErr.message);
+      console.error('Booking confirmation email failed:', {
+        message: mailErr?.message,
+        code: mailErr?.code,
+        response: mailErr?.response
+      });
     }
 
     res.status(201).json({
