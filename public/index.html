@@ -11,6 +11,34 @@
     rel="stylesheet"
   />
   <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .map-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .map-input-row input[readonly] {
+      background-color: rgba(128, 128, 128, 0.08);
+      cursor: pointer;
+    }
+    .map-picker-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .map-canvas {
+      width: 100%;
+      height: 340px;
+      border-radius: 10px;
+      border: 1px solid rgba(128, 128, 128, 0.25);
+    }
+    .map-selected-info {
+      font-size: 0.9rem;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(128, 128, 128, 0.08);
+    }
+  </style>
 </head>
 <body>
   <header class="topbar">
@@ -108,6 +136,10 @@
       </div>
       <form id="bookingForm" class="modal-body">
         <input type="hidden" id="bookingCarId" />
+        <input type="hidden" id="pickupLatInput" />
+        <input type="hidden" id="pickupLngInput" />
+        <input type="hidden" id="dropoffLatInput" />
+        <input type="hidden" id="dropoffLngInput" />
         <p id="bookingCarSummary" class="car-summary"></p>
 
         <div class="form-grid">
@@ -121,11 +153,29 @@
           </div>
           <div class="field">
             <label for="pickupLocationInput" data-i18n="pickupLocation">აყვანის ლოკაცია *</label>
-            <input type="text" id="pickupLocationInput" required placeholder="თბილისი / აეროპორტი" />
+            <div class="map-input-row">
+              <input
+                type="text"
+                id="pickupLocationInput"
+                readonly
+                required
+                placeholder="აირჩიეთ რუკაზე..."
+              />
+              <button type="button" class="btn btn-outline" id="pickPickupMapBtn" data-i18n="pickOnMap">რუკა</button>
+            </div>
           </div>
           <div class="field">
             <label for="dropoffLocationInput" data-i18n="dropoffLocation">დაბრუნების ლოკაცია</label>
-            <input type="text" id="dropoffLocationInput" placeholder="იგივე ან სხვა ლოკაცია" />
+            <div class="map-input-row">
+              <input
+                type="text"
+                id="dropoffLocationInput"
+                readonly
+                placeholder="იგივე ან აირჩიეთ რუკაზე"
+              />
+              <button type="button" class="btn btn-outline" id="pickDropoffMapBtn" data-i18n="pickOnMap">რუკა</button>
+              <button type="button" class="btn btn-ghost" id="clearDropoffMapBtn" title="Clear">&times;</button>
+            </div>
           </div>
           <div class="field">
             <label for="customerNameInput" data-i18n="fullName">სახელი და გვარი *</label>
@@ -153,6 +203,32 @@
           <button type="submit" class="btn btn-primary" data-i18n="confirmBooking">დაჯავშნა</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Google Map Picker Modal -->
+  <div class="modal-backdrop hidden" id="mapModal">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h2 id="mapModalTitle" data-i18n="mapPickerTitle">მისამართის არჩევა რუკაზე</h2>
+        <button type="button" class="close-btn" data-close="mapModal">&times;</button>
+      </div>
+      <div class="modal-body map-picker-box">
+        <div class="field">
+          <label for="mapSearchInput" data-i18n="mapSearchLabel">მისამართის ძიება</label>
+          <input type="text" id="mapSearchInput" placeholder="ჩაწერეთ მისამართი ან დასვით პინი რუკაზე..." />
+        </div>
+        <div id="googleMapCanvas" class="map-canvas"></div>
+        <div id="mapSelectedSummary" class="map-selected-info muted" data-i18n="mapSelectHint">
+          დააკლიკეთ რუკაზე პინის დასასმელად ან აირჩიეთ მისამართი ძიებიდან.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-close="mapModal" data-i18n="cancel">გაუქმება</button>
+          <button type="button" class="btn btn-primary" id="confirmMapLocationBtn" data-i18n="confirmLocation">
+            ლოკაციის დადასტურება
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -191,6 +267,11 @@
     </div>
   </div>
 
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places&callback=initGoogleMapPicker"
+    async
+    defer
+  ></script>
   <script src="/js/app.js"></script>
 </body>
 </html>
