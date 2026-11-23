@@ -108,9 +108,10 @@ export function createBooking(payload) {
       customer_phone,
       customer_email,
       notes,
+      total_days,
       total_price,
       status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
   `);
 
   const result = insertStmt.run(
@@ -124,6 +125,7 @@ export function createBooking(payload) {
     customerPhone,
     customerEmail,
     notes,
+    days,
     totalPrice
   );
 
