@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "western-car-rental",
   "version": "1.0.0",
   "description": "Western Car Rental - Full-Stack Car Rental Platform",
@@ -12,6 +12,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.21.0"
+    "express": "^4.21.0",
+    "nodemailer": "^10.6.1"
   }
 }

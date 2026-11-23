@@ -1,11 +1,22 @@
 import * as bookingService from '../services/bookingService.js';
+import { sendBookingConfirmationEmail } from '../utils/mailer.js';
 
-export function create(req, res, next) {
+export async function create(req, res, next) {
   try {
-    const booking = bookingService.createBooking(req.body);
+    const { booking, car } = bookingService.createBooking(req.body);
+
+    let emailSent = false;
+    try {
+      const mailResult = await sendBookingConfirmationEmail(booking, car);
+      emailSent = Boolean(mailResult?.sent);
+    } catch (mailErr) {
+      console.error('Booking confirmation email failed:', mailErr.message);
+    }
+
     res.status(201).json({
       success: true,
       brand: 'Western - Car Rental',
+      emailSent,
       data: booking
     });
   } catch (err) {
