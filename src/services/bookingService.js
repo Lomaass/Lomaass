@@ -33,8 +33,8 @@ function generateBookingCode() {
 
 export function createBooking(payload) {
   const carId = Number(payload?.car_id);
-  const pickupDate = String(payload?.pickup_date || '').trim();
-  const dropoffDate = String(payload?.dropoff_date || '').trim();
+  const pickupDate = String(payload?.pickup_date || '').trim().slice(0, 10);
+  const dropoffDate = String(payload?.dropoff_date || '').trim().slice(0, 10);
   const pickupLocation = String(payload?.pickup_location || '').trim();
   const dropoffLocation = String(payload?.dropoff_location || pickupLocation).trim();
   const customerName = String(payload?.customer_name || '').trim();
@@ -74,18 +74,23 @@ export function createBooking(payload) {
     throw createHttpError(404, 'არჩეული ავტომობილი ვერ მოიძებნა');
   }
 
-  const overlap = db
+  const activeBookings = db
     .prepare(
-      `SELECT id FROM bookings
+      `SELECT id, pickup_date, dropoff_date, LOWER(TRIM(status)) AS status
+       FROM bookings
        WHERE car_id = ?
-         AND status IN ('pending', 'confirmed')
-         AND pickup_date < ?
-         AND dropoff_date > ?
-       LIMIT 1`
+         AND LOWER(TRIM(status)) IN ('pending', 'confirmed')`
     )
-    .get(carId, dropoffDate, pickupDate);
+    .all(carId);
 
-  if (overlap) {
+  const hasOverlap = activeBookings.some((b) => {
+    const bStart = parseIsoDate(String(b.pickup_date || '').slice(0, 10));
+    const bEnd = parseIsoDate(String(b.dropoff_date || '').slice(0, 10));
+    if (bStart === null || bEnd === null) return false;
+    return bStart < endMs && bEnd > startMs;
+  });
+
+  if (hasOverlap) {
     throw createHttpError(409, 'არჩეულ თარიღებში ეს ავტომობილი უკვე დაჯავშნილია');
   }
 
@@ -167,7 +172,7 @@ export function getAllBookings(filters = {}) {
         `SELECT b.*, c.brand, c.model, c.year, c.category
          FROM bookings b
          JOIN cars c ON c.id = b.car_id
-         WHERE b.status = ?
+         WHERE LOWER(TRIM(b.status)) = ?
          ORDER BY b.created_at DESC, b.id DESC`
       )
       .all(status);

@@ -1,29 +1,3 @@
-import nodemailer from 'nodemailer';
-
-function createTransporter() {
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT || 465);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-
-  if (!host || !user || !pass) {
-    return null;
-  }
-
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: {
-      user,
-      pass
-    },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000
-  });
-}
-
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -34,13 +8,13 @@ function escapeHtml(value) {
 }
 
 export async function sendBookingConfirmationEmail(booking, car) {
-  const transporter = createTransporter();
-  if (!transporter) {
-    console.warn('SMTP configuration is incomplete; skipping booking confirmation email.');
-    return { sent: false, reason: 'missing_smtp_config' };
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.warn('RESEND_API_KEY is missing; skipping booking confirmation email.');
+    return { sent: false, reason: 'missing_resend_api_key' };
   }
 
-  const from = process.env.MAIL_FROM || `Western - Car Rental <${process.env.SMTP_USER}>`;
+  const from = process.env.MAIL_FROM || 'Western - Car Rental <onboarding@resend.dev>';
   const to = booking?.customer_email;
 
   if (!to) {
@@ -102,18 +76,42 @@ export async function sendBookingConfirmationEmail(booking, car) {
     </div>
   `;
 
-  const info = await transporter.sendMail({
-    from,
-    to,
-    subject,
-    text,
-    html
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-  console.log('Booking confirmation email sent:', {
-    messageId: info.messageId,
-    to
-  });
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject,
+        text,
+        html
+      }),
+      signal: controller.signal
+    });
 
-  return { sent: true, messageId: info.messageId };
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const err = new Error(data?.message || `Resend API error (${response.status})`);
+      err.code = `RESEND_${response.status}`;
+      err.response = JSON.stringify(data);
+      throw err;
+    }
+
+    console.log('Booking confirmation email sent via Resend:', {
+      id: data?.id,
+      to
+    });
+
+    return { sent: true, id: data?.id };
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
