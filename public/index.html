@@ -10,6 +10,12 @@
     href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
   <link rel="stylesheet" href="/css/style.css" />
   <style>
     .map-input-row {
@@ -26,11 +32,19 @@
       flex-direction: column;
       gap: 10px;
     }
+    .map-search-row {
+      display: flex;
+      gap: 8px;
+    }
+    .map-search-row input {
+      flex: 1;
+    }
     .map-canvas {
       width: 100%;
       height: 340px;
       border-radius: 10px;
       border: 1px solid rgba(128, 128, 128, 0.25);
+      z-index: 1;
     }
     .map-selected-info {
       font-size: 0.9rem;
@@ -206,7 +220,7 @@
     </div>
   </div>
 
-  <!-- Google Map Picker Modal -->
+  <!-- Leaflet Map Picker Modal -->
   <div class="modal-backdrop hidden" id="mapModal">
     <div class="modal modal-wide">
       <div class="modal-header">
@@ -216,11 +230,14 @@
       <div class="modal-body map-picker-box">
         <div class="field">
           <label for="mapSearchInput" data-i18n="mapSearchLabel">მისამართის ძიება</label>
-          <input type="text" id="mapSearchInput" placeholder="ჩაწერეთ მისამართი ან დასვით პინი რუკაზე..." />
+          <div class="map-search-row">
+            <input type="text" id="mapSearchInput" placeholder="მაგ: რუსთაველის გამზირი, თბილისი" />
+            <button type="button" class="btn btn-outline" id="mapSearchBtn" data-i18n="searchCars">მოძებნა</button>
+          </div>
         </div>
-        <div id="googleMapCanvas" class="map-canvas"></div>
+        <div id="leafletMapCanvas" class="map-canvas"></div>
         <div id="mapSelectedSummary" class="map-selected-info muted" data-i18n="mapSelectHint">
-          დააკლიკეთ რუკაზე პინის დასასმელად ან აირჩიეთ მისამართი ძიებიდან.
+          დააკლიკეთ რუკაზე პინის დასასმელად ან მოძებნეთ მისამართი.
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-ghost" data-close="mapModal" data-i18n="cancel">გაუქმება</button>
@@ -268,9 +285,9 @@
   </div>
 
   <script
-    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places&callback=initGoogleMapPicker"
-    async
-    defer
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
   ></script>
   <script src="/js/app.js"></script>
 </body>

@@ -26,11 +26,13 @@ const translations = {
     pickOnMap: 'რუკა',
     mapPickerTitle: 'მისამართის არჩევა რუკაზე',
     mapSearchLabel: 'მისამართის ძიება',
-    mapSelectHint: 'დააკლიკეთ რუკაზე პინის დასასმელად ან აირჩიეთ მისამართი ძიებიდან.',
+    mapSelectHint: 'დააკლიკეთ რუკაზე პინის დასასმელად ან მოძებნეთ მისამართი.',
+    mapLoadingAddress: 'მისამართის განსაზღვრა...',
+    mapNotFound: 'მისამართი ვერ მოიძებნა, სცადეთ სხვა ჩანაწერი ან დასვით პინი რუკაზე.',
     confirmLocation: 'ლოკაციის დადასტურება',
-    locationRequiredErr: 'გთხოვთ აირჩიოთ რეალური აყვანის მისამართი რუკაზე ან ძიებიდან.',
-    dropoffInvalidErr: 'გთხოვთ აირჩიოთ რეალური დაბრუნების მისამართი რუკაზე ან ძიებიდან.',
-    mapNotReadyErr: 'Google Maps ჯერ არ ჩატვირთულა ან API გასაღები არასწორია.',
+    locationRequiredErr: 'გთხოვთ აირჩიოთ აყვანის ლოკაცია რუკაზე.',
+    dropoffInvalidErr: 'გთხოვთ აირჩიოთ დაბრუნების ლოკაცია რუკაზე.',
+    mapNotReadyErr: 'რუკის ბიბლიოთეკა ვერ ჩაიტვირთა. განაახლეთ გვერდი.',
     fullName: 'სახელი და გვარი *',
     phone: 'ტელეფონი *',
     email: 'ელ-ფოსტა *',
@@ -71,11 +73,13 @@ const translations = {
     pickOnMap: 'Map',
     mapPickerTitle: 'Select Address on Map',
     mapSearchLabel: 'Search Address',
-    mapSelectHint: 'Click on the map to drop a pin or pick a suggestion from search.',
+    mapSelectHint: 'Click on the map to drop a pin or search for an address.',
+    mapLoadingAddress: 'Resolving address...',
+    mapNotFound: 'Address not found. Try another query or drop a pin directly on the map.',
     confirmLocation: 'Confirm Location',
-    locationRequiredErr: 'Please pick a valid pickup address from the map or search.',
-    dropoffInvalidErr: 'Please pick a valid drop-off address from the map or search.',
-    mapNotReadyErr: 'Google Maps is not loaded yet or the API key is missing.',
+    locationRequiredErr: 'Please select a valid pickup location on the map.',
+    dropoffInvalidErr: 'Please select a valid drop-off location on the map.',
+    mapNotReadyErr: 'Map library failed to load. Please refresh the page.',
     fullName: 'Full Name *',
     phone: 'Phone *',
     email: 'Email *',
@@ -95,11 +99,9 @@ let currentLang = 'ka';
 let selectedCar = null;
 let activeAdminKey = '';
 
-// Google Map state
-let googleMapsReady = false;
-let mapInstance = null;
-let mapMarker = null;
-let geocoderInstance = null;
+// Leaflet Map state
+let leafletMap = null;
+let leafletMarker = null;
 let activeLocationTarget = 'pickup'; // 'pickup' | 'dropoff'
 let pendingPickedLocation = null; // { address, lat, lng }
 
@@ -133,7 +135,8 @@ const els = {
   clearDropoffMapBtn: document.getElementById('clearDropoffMapBtn'),
   mapModal: document.getElementById('mapModal'),
   mapSearchInput: document.getElementById('mapSearchInput'),
-  googleMapCanvas: document.getElementById('googleMapCanvas'),
+  mapSearchBtn: document.getElementById('mapSearchBtn'),
+  leafletMapCanvas: document.getElementById('leafletMapCanvas'),
   mapSelectedSummary: document.getElementById('mapSelectedSummary'),
   confirmMapLocationBtn: document.getElementById('confirmMapLocationBtn'),
   customerNameInput: document.getElementById('customerNameInput'),
@@ -187,83 +190,91 @@ function resetBookingLocations() {
   pendingPickedLocation = null;
 }
 
-function setPinAtLatLng(latLng, addressText = '') {
-  const lat = typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat;
-  const lng = typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng;
+function ensureLeafletMap() {
+  if (!window.L || !els.leafletMapCanvas) return false;
+  if (leafletMap) return true;
 
-  if (!mapMarker) {
-    mapMarker = new google.maps.Marker({
-      map: mapInstance,
-      position: { lat, lng },
-      draggable: true
-    });
+  const tbilisiCoords = [41.7151, 44.8271];
+  leafletMap = L.map(els.leafletMapCanvas).setView(tbilisiCoords, 12);
 
-    mapMarker.addListener('dragend', (ev) => {
-      const moved = ev.latLng;
-      reverseGeocodeAndSet(moved.lat(), moved.lng());
-    });
-  } else {
-    mapMarker.setPosition({ lat, lng });
-  }
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(leafletMap);
 
-  mapInstance.panTo({ lat, lng });
+  leafletMap.on('click', (e) => {
+    placeLeafletPin(e.latlng.lat, e.latlng.lng);
+  });
 
-  if (addressText) {
-    pendingPickedLocation = { address: addressText, lat, lng };
-    els.mapSelectedSummary.textContent = `${addressText} (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
-  } else {
-    reverseGeocodeAndSet(lat, lng);
+  return true;
+}
+
+async function reverseGeocodeLeaflet(lat, lng) {
+  els.mapSelectedSummary.textContent = t('mapLoadingAddress');
+  const fallbackLabel = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&accept-language=${currentLang}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Reverse geocode failed');
+    const data = await res.json();
+    const address = data.display_name || fallbackLabel;
+    pendingPickedLocation = { address, lat, lng };
+    els.mapSelectedSummary.textContent = `${address} (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+  } catch {
+    pendingPickedLocation = { address: fallbackLabel, lat, lng };
+    els.mapSelectedSummary.textContent = fallbackLabel;
   }
 }
 
-function reverseGeocodeAndSet(lat, lng) {
-  if (!geocoderInstance) return;
-  geocoderInstance.geocode({ location: { lat, lng } }, (results, status) => {
-    if (status === 'OK' && results && results[0]) {
-      const formatted = results[0].formatted_address;
-      pendingPickedLocation = { address: formatted, lat, lng };
-      els.mapSelectedSummary.textContent = `${formatted} (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
-    } else {
-      pendingPickedLocation = null;
-      els.mapSelectedSummary.textContent = t('mapSelectHint');
+function placeLeafletPin(lat, lng, presetAddress = '') {
+  if (!leafletMap) return;
+
+  if (!leafletMarker) {
+    leafletMarker = L.marker([lat, lng], { draggable: true }).addTo(leafletMap);
+    leafletMarker.on('dragend', () => {
+      const pos = leafletMarker.getLatLng();
+      reverseGeocodeLeaflet(pos.lat, pos.lng);
+    });
+  } else {
+    leafletMarker.setLatLng([lat, lng]);
+  }
+
+  leafletMap.panTo([lat, lng]);
+
+  if (presetAddress) {
+    pendingPickedLocation = { address: presetAddress, lat, lng };
+    els.mapSelectedSummary.textContent = `${presetAddress} (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+  } else {
+    reverseGeocodeLeaflet(lat, lng);
+  }
+}
+
+async function searchAddressOnMap() {
+  const query = els.mapSearchInput.value.trim();
+  if (!query || !leafletMap) return;
+
+  els.mapSelectedSummary.textContent = t('mapLoadingAddress');
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}&accept-language=${currentLang}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Search failed');
+    const results = await res.json();
+
+    if (!results || !results.length) {
+      els.mapSelectedSummary.textContent = t('mapNotFound');
+      return;
     }
-  });
-}
 
-window.initGoogleMapPicker = function initGoogleMapPicker() {
-  if (!window.google || !window.google.maps || !els.googleMapCanvas) return;
-
-  const defaultCenter = { lat: 41.7151, lng: 44.8271 }; // Tbilisi
-  mapInstance = new google.maps.Map(els.googleMapCanvas, {
-    center: defaultCenter,
-    zoom: 12,
-    streetViewControl: false,
-    mapTypeControl: false
-  });
-
-  geocoderInstance = new google.maps.Geocoder();
-
-  mapInstance.addListener('click', (event) => {
-    setPinAtLatLng(event.latLng);
-  });
-
-  if (els.mapSearchInput && google.maps.places) {
-    const autocomplete = new google.maps.places.Autocomplete(els.mapSearchInput, {
-      fields: ['formatted_address', 'geometry', 'name']
-    });
-
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace();
-      if (!place.geometry || !place.geometry.location) return;
-      const address = place.formatted_address || place.name || '';
-      if (!address) return;
-      mapInstance.setZoom(15);
-      setPinAtLatLng(place.geometry.location, address);
-    });
+    const best = results[0];
+    const lat = Number(best.lat);
+    const lng = Number(best.lon);
+    leafletMap.setView([lat, lng], 15);
+    placeLeafletPin(lat, lng, best.display_name);
+  } catch {
+    els.mapSelectedSummary.textContent = t('mapNotFound');
   }
-
-  googleMapsReady = true;
-};
+}
 
 function openMapForTarget(target) {
   activeLocationTarget = target;
@@ -271,7 +282,7 @@ function openMapForTarget(target) {
   els.bookingMessage.className = 'feedback';
   els.bookingMessage.textContent = '';
 
-  if (!googleMapsReady || !mapInstance) {
+  if (!ensureLeafletMap()) {
     els.bookingMessage.className = 'feedback err';
     els.bookingMessage.textContent = t('mapNotReadyErr');
     return;
@@ -282,7 +293,8 @@ function openMapForTarget(target) {
   els.mapSelectedSummary.textContent = t('mapSelectHint');
 
   setTimeout(() => {
-    google.maps.event.trigger(mapInstance, 'resize');
+    leafletMap.invalidateSize();
+
     const existingLat =
       target === 'pickup' ? Number(els.pickupLatInput.value) : Number(els.dropoffLatInput.value);
     const existingLng =
@@ -291,11 +303,14 @@ function openMapForTarget(target) {
       target === 'pickup' ? els.pickupLocationInput.value : els.dropoffLocationInput.value;
 
     if (Number.isFinite(existingLat) && Number.isFinite(existingLng) && existingLat !== 0 && existingLng !== 0) {
-      setPinAtLatLng({ lat: existingLat, lng: existingLng }, existingAddr);
-      mapInstance.setZoom(15);
+      leafletMap.setView([existingLat, existingLng], 15);
+      placeLeafletPin(existingLat, existingLng, existingAddr);
     } else {
-      mapInstance.setCenter({ lat: 41.7151, lng: 44.8271 });
-      mapInstance.setZoom(12);
+      if (leafletMarker) {
+        leafletMap.removeLayer(leafletMarker);
+        leafletMarker = null;
+      }
+      leafletMap.setView([41.7151, 44.8271], 12);
     }
   }, 60);
 }
@@ -305,6 +320,14 @@ els.pickupLocationInput?.addEventListener('click', () => openMapForTarget('picku
 
 els.pickDropoffMapBtn?.addEventListener('click', () => openMapForTarget('dropoff'));
 els.dropoffLocationInput?.addEventListener('click', () => openMapForTarget('dropoff'));
+
+els.mapSearchBtn?.addEventListener('click', searchAddressOnMap);
+els.mapSearchInput?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    searchAddressOnMap();
+  }
+});
 
 els.clearDropoffMapBtn?.addEventListener('click', () => {
   els.dropoffLocationInput.value = '';
