@@ -36,7 +36,7 @@ const translations = {
     deliveryOutside: 'მიწოდება / დაბრუნება ქალაქგარეთ / სხვა ქალაქში (+$100)',
     pickupLocation: 'სად დახვდეს მანქანა (აყვანა) *',
     dropoffLocation: 'სად ჩააბაროს მანქანა (დაბრუნება) *',
-    pickOnMap: 'რუკა',
+    pinPlaceholder: 'დასვით პინი რუკაზე...',
     paymentMethodLabel: 'გადახდის მეთოდი (აყვანისას) *',
     paymentCash: 'ქეშით (Cash)',
     paymentCard: 'ბარათით (Card)',
@@ -93,7 +93,7 @@ const translations = {
     deliveryOutside: 'Delivery / return outside Tbilisi / other city (+$100)',
     pickupLocation: 'Where to meet car (Pickup) *',
     dropoffLocation: 'Where to return car (Drop-off) *',
-    pickOnMap: 'Map',
+    pinPlaceholder: 'Drop a pin on map...',
     paymentMethodLabel: 'Payment Method (At Pickup) *',
     paymentCash: 'Cash',
     paymentCard: 'Card',
@@ -128,11 +128,10 @@ let currentLang = 'ka';
 let selectedCar = null;
 let activeAdminKey = '';
 
-// Leaflet Map state
 let leafletMap = null;
 let leafletMarker = null;
-let activeLocationTarget = 'pickup'; // 'pickup' | 'dropoff'
-let pendingPickedLocation = null; // { address, lat, lng }
+let activeLocationTarget = 'pickup';
+let pendingPickedLocation = null;
 
 const els = {
   carsGrid: document.getElementById('carsGrid'),
@@ -162,8 +161,6 @@ const els = {
   pickupLngInput: document.getElementById('pickupLngInput'),
   dropoffLatInput: document.getElementById('dropoffLatInput'),
   dropoffLngInput: document.getElementById('dropoffLngInput'),
-  pickPickupMapBtn: document.getElementById('pickPickupMapBtn'),
-  pickDropoffMapBtn: document.getElementById('pickDropoffMapBtn'),
   mapModal: document.getElementById('mapModal'),
   mapSearchInput: document.getElementById('mapSearchInput'),
   mapSearchBtn: document.getElementById('mapSearchBtn'),
@@ -207,6 +204,9 @@ function applyTranslations() {
       node.textContent = val;
     }
   });
+
+  if (els.pickupLocationInput) els.pickupLocationInput.placeholder = t('pinPlaceholder');
+  if (els.dropoffLocationInput) els.dropoffLocationInput.placeholder = t('pinPlaceholder');
 
   updatePricePreview();
 }
@@ -409,10 +409,7 @@ function openMapForTarget(target) {
 
 els.deliveryTypeInput?.addEventListener('change', syncDeliveryTypeUI);
 
-els.pickPickupMapBtn?.addEventListener('click', () => openMapForTarget('pickup'));
 els.pickupLocationInput?.addEventListener('click', () => openMapForTarget('pickup'));
-
-els.pickDropoffMapBtn?.addEventListener('click', () => openMapForTarget('dropoff'));
 els.dropoffLocationInput?.addEventListener('click', () => openMapForTarget('dropoff'));
 
 els.mapSearchBtn?.addEventListener('click', searchAddressOnMap);
@@ -632,6 +629,7 @@ els.bookingForm?.addEventListener('submit', async (e) => {
     payment_method: paymentMethod,
     delivery_fee: calc.deliveryFee,
     service_fee: calc.serviceFee,
+    total_days: calc.diffDays > 0 ? calc.diffDays : undefined,
     total_price: calc.total > 0 ? calc.total : undefined,
     customer_name: els.customerNameInput.value.trim(),
     customer_phone: els.customerPhoneInput.value.trim(),
