@@ -30,20 +30,78 @@
       width: 100%;
       flex: 1;
     }
-    .phone-input-group {
+
+    /* გაერთიანებული ტელეფონის უჯრა დროშის ხატულით */
+    .phone-combined-box {
       display: flex;
-      gap: 8px;
-      align-items: stretch;
+      align-items: center;
       width: 100%;
+      min-height: 44px;
+      border: 1px solid rgba(128, 128, 128, 0.35);
+      border-radius: 10px;
+      background-color: var(--input-bg, #ffffff);
+      overflow: hidden;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-    .phone-code-select {
-      width: 132px;
+    .phone-combined-box:focus-within {
+      border-color: var(--primary, #2563eb);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+    .phone-country-selector {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 10px 0 12px;
+      height: 100%;
+      min-height: 42px;
+      background: rgba(128, 128, 128, 0.05);
+      border-right: 1px solid rgba(128, 128, 128, 0.22);
       flex-shrink: 0;
+      user-select: none;
+    }
+    .phone-flag-img {
+      width: 20px;
+      height: 14px;
+      object-fit: cover;
+      border-radius: 2px;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+      flex-shrink: 0;
+    }
+    .phone-code-display {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: inherit;
+      white-space: nowrap;
+    }
+    .phone-caret {
+      font-size: 0.72rem;
+      opacity: 0.7;
+      margin-left: 1px;
+    }
+    .phone-code-select-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      border: none;
+      background: transparent;
     }
     .phone-number-input {
       flex: 1;
       min-width: 0;
+      width: 100%;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      color: inherit;
     }
+
     .map-picker-box {
       display: flex;
       flex-direction: column;
@@ -259,23 +317,37 @@
           </div>
           <div class="field">
             <label for="customerPhoneInput" data-i18n="phone">ტელეფონი *</label>
-            <div class="phone-input-group">
-              <select id="phoneCountryCodeInput" class="phone-code-select" aria-label="Country code">
-                <option value="+995" selected>🇬🇪 +995</option>
-                <option value="+1">🇺🇸 +1</option>
-                <option value="+44">🇬🇧 +44</option>
-                <option value="+49">🇩🇪 +49</option>
-                <option value="+33">🇫🇷 +33</option>
-                <option value="+39">🇮🇹 +39</option>
-                <option value="+34">🇪🇸 +34</option>
-                <option value="+48">🇵🇱 +48</option>
-                <option value="+90">🇹🇷 +90</option>
-                <option value="+971">🇦🇪 +971</option>
-                <option value="+374">🇦🇲 +374</option>
-                <option value="+994">🇦🇿 +994</option>
-                <option value="+380">🇺🇦 +380</option>
-                <option value="+7">🇰🇿 +7</option>
-              </select>
+            <div class="phone-combined-box">
+              <div class="phone-country-selector" title="Select country code">
+                <img
+                  id="phoneFlagImg"
+                  class="phone-flag-img"
+                  src="https://flagcdn.com/w40/ge.png"
+                  alt="GE"
+                />
+                <span id="phoneCodeDisplay" class="phone-code-display">+995</span>
+                <span class="phone-caret">&#9662;</span>
+                <select
+                  id="phoneCountryCodeInput"
+                  class="phone-code-select-overlay"
+                  aria-label="Country code"
+                >
+                  <option value="+995" data-iso="ge" selected>Georgia (+995)</option>
+                  <option value="+1" data-iso="us">United States (+1)</option>
+                  <option value="+44" data-iso="gb">United Kingdom (+44)</option>
+                  <option value="+49" data-iso="de">Germany (+49)</option>
+                  <option value="+33" data-iso="fr">France (+33)</option>
+                  <option value="+39" data-iso="it">Italy (+39)</option>
+                  <option value="+34" data-iso="es">Spain (+34)</option>
+                  <option value="+48" data-iso="pl">Poland (+48)</option>
+                  <option value="+90" data-iso="tr">Turkey (+90)</option>
+                  <option value="+971" data-iso="ae">UAE (+971)</option>
+                  <option value="+374" data-iso="am">Armenia (+374)</option>
+                  <option value="+994" data-iso="az">Azerbaijan (+994)</option>
+                  <option value="+380" data-iso="ua">Ukraine (+380)</option>
+                  <option value="+7" data-iso="kz">Kazakhstan (+7)</option>
+                </select>
+              </div>
               <input
                 type="tel"
                 id="customerPhoneInput"

@@ -171,6 +171,8 @@ const els = {
   confirmMapLocationBtn: document.getElementById('confirmMapLocationBtn'),
   customerNameInput: document.getElementById('customerNameInput'),
   phoneCountryCodeInput: document.getElementById('phoneCountryCodeInput'),
+  phoneFlagImg: document.getElementById('phoneFlagImg'),
+  phoneCodeDisplay: document.getElementById('phoneCodeDisplay'),
   customerPhoneInput: document.getElementById('customerPhoneInput'),
   customerEmailInput: document.getElementById('customerEmailInput'),
   notesInput: document.getElementById('notesInput'),
@@ -187,6 +189,24 @@ const els = {
   adminMessage: document.getElementById('adminMessage'),
   adminBookingsList: document.getElementById('adminBookingsList')
 };
+
+function syncPhoneCountryVisual() {
+  const select = els.phoneCountryCodeInput;
+  if (!select) return;
+  const selectedOpt = select.options[select.selectedIndex];
+  const code = select.value || '+995';
+  const iso = (selectedOpt?.getAttribute('data-iso') || 'ge').toLowerCase();
+
+  if (els.phoneCodeDisplay) {
+    els.phoneCodeDisplay.textContent = code;
+  }
+  if (els.phoneFlagImg) {
+    els.phoneFlagImg.src = `https://flagcdn.com/w40/${iso}.png`;
+    els.phoneFlagImg.alt = iso.toUpperCase();
+  }
+}
+
+els.phoneCountryCodeInput?.addEventListener('change', syncPhoneCountryVisual);
 
 function t(key, ...args) {
   const val = translations[currentLang][key];
@@ -550,6 +570,7 @@ async function openBooking(carId) {
   if (els.deliveryTypeInput) els.deliveryTypeInput.value = 'office';
   if (els.paymentMethodInput) els.paymentMethodInput.value = 'cash';
   if (els.phoneCountryCodeInput) els.phoneCountryCodeInput.value = '+995';
+  syncPhoneCountryVisual();
 
   if (els.filterPickup?.value) els.pickupDateInput.value = els.filterPickup.value;
   if (els.filterDropoff?.value) els.dropoffDateInput.value = els.filterDropoff.value;
@@ -695,6 +716,7 @@ els.bookingForm?.addEventListener('submit', async (e) => {
   if (els.deliveryTypeInput) els.deliveryTypeInput.value = 'office';
   if (els.paymentMethodInput) els.paymentMethodInput.value = 'cash';
   if (els.phoneCountryCodeInput) els.phoneCountryCodeInput.value = '+995';
+  syncPhoneCountryVisual();
   syncDeliveryTypeUI();
   fetchAndRenderCars();
 });
@@ -868,5 +890,6 @@ els.resetFiltersBtn?.addEventListener('click', () => {
   fetchAndRenderCars();
 });
 
+syncPhoneCountryVisual();
 applyTranslations();
 fetchAndRenderCars();
