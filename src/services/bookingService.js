@@ -1,7 +1,14 @@
 import crypto from 'node:crypto';
 import db from '../config/db.js';
 
-const ALLOWED_STATUSES = ['pending', 'confirmed', 'completed', 'cancelled'];
+const ALLOWED_STATUSES = ['pending', 'confirmed', 'active', 'completed', 'cancelled'];
+const OFFICE_ADDRESS = 'გიორგი აბაშვილის ქუჩა, 3/8';
+const SERVICE_FEE_RATE = 0.1; // 10%
+const DELIVERY_FEES = {
+  office: 0,
+  tbilisi: 25,
+  outside: 100
+};
 
 function createHttpError(status, message) {
   const err = new Error(message);
@@ -35,8 +42,23 @@ export function createBooking(payload) {
   const carId = Number(payload?.car_id);
   const pickupDate = String(payload?.pickup_date || '').trim().slice(0, 10);
   const dropoffDate = String(payload?.dropoff_date || '').trim().slice(0, 10);
-  const pickupLocation = String(payload?.pickup_location || '').trim();
-  const dropoffLocation = String(payload?.dropoff_location || pickupLocation).trim();
+
+  const rawDeliveryType = String(payload?.delivery_type || 'office').trim().toLowerCase();
+  const deliveryType = Object.hasOwn(DELIVERY_FEES, rawDeliveryType) ? rawDeliveryType : 'office';
+
+  const rawPaymentMethod = String(payload?.payment_method || 'cash').trim().toLowerCase();
+  const paymentMethod = rawPaymentMethod === 'card' ? 'card' : 'cash';
+
+  const pickupLocation =
+    deliveryType === 'office'
+      ? OFFICE_ADDRESS
+      : String(payload?.pickup_location || '').trim();
+
+  const dropoffLocation =
+    deliveryType === 'office'
+      ? OFFICE_ADDRESS
+      : String(payload?.dropoff_location || pickupLocation).trim();
+
   const customerName = String(payload?.customer_name || '').trim();
   const customerPhone = String(payload?.customer_phone || '').trim();
   const customerEmail = String(payload?.customer_email || '').trim().toLowerCase();
@@ -45,7 +67,7 @@ export function createBooking(payload) {
   if (!Number.isInteger(carId) || carId <= 0) {
     throw createHttpError(400, 'აირჩიეთ სწორი ავტომობილი');
   }
-  if (!pickupDate || !dropoffDate || !pickupLocation || !customerName || !customerPhone || !customerEmail) {
+  if (!pickupDate || !dropoffDate || !pickupLocation || !dropoffLocation || !customerName || !customerPhone || !customerEmail) {
     throw createHttpError(400, 'შეავსეთ ყველა სავალდებულო ველი');
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
@@ -79,7 +101,7 @@ export function createBooking(payload) {
       `SELECT id, pickup_date, dropoff_date, LOWER(TRIM(status)) AS status
        FROM bookings
        WHERE car_id = ?
-         AND LOWER(TRIM(status)) IN ('pending', 'confirmed')`
+         AND LOWER(TRIM(status)) IN ('pending', 'confirmed', 'active')`
     )
     .all(carId);
 
@@ -94,7 +116,11 @@ export function createBooking(payload) {
     throw createHttpError(409, 'არჩეულ თარიღებში ეს ავტომობილი უკვე დაჯავშნილია');
   }
 
-  const totalPrice = Number((days * Number(car.daily_price)).toFixed(2));
+  const baseRental = Number((days * Number(car.daily_price)).toFixed(2));
+  const deliveryFee = Number(DELIVERY_FEES[deliveryType].toFixed(2));
+  const subtotal = Number((baseRental + deliveryFee).toFixed(2));
+  const serviceFee = Number((subtotal * SERVICE_FEE_RATE).toFixed(2));
+  const totalPrice = Number((subtotal + serviceFee).toFixed(2));
 
   let bookingCode = generateBookingCode();
   while (db.prepare('SELECT 1 FROM bookings WHERE booking_code = ?').get(bookingCode)) {
@@ -109,14 +135,18 @@ export function createBooking(payload) {
       dropoff_date,
       pickup_location,
       dropoff_location,
+      delivery_type,
+      payment_method,
+      delivery_fee,
+      service_fee,
       customer_name,
-      customer_phone,
       customer_email,
+      customer_phone,
       notes,
       total_days,
       total_price,
       status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
   `);
 
   const result = insertStmt.run(
@@ -126,9 +156,13 @@ export function createBooking(payload) {
     dropoffDate,
     pickupLocation,
     dropoffLocation,
+    deliveryType,
+    paymentMethod,
+    deliveryFee,
+    serviceFee,
     customerName,
-    customerPhone,
     customerEmail,
+    customerPhone,
     notes,
     days,
     totalPrice
@@ -169,7 +203,7 @@ export function getAllBookings(filters = {}) {
   if (status && ALLOWED_STATUSES.includes(status)) {
     return db
       .prepare(
-        `SELECT b.*, c.brand, c.model, c.year, c.category
+        `SELECT b.*, c.brand, c.model, c.year, c.category, c.daily_price
          FROM bookings b
          JOIN cars c ON c.id = b.car_id
          WHERE LOWER(TRIM(b.status)) = ?
@@ -180,7 +214,7 @@ export function getAllBookings(filters = {}) {
 
   return db
     .prepare(
-      `SELECT b.*, c.brand, c.model, c.year, c.category
+      `SELECT b.*, c.brand, c.model, c.year, c.category, c.daily_price
        FROM bookings b
        JOIN cars c ON c.id = b.car_id
        ORDER BY b.created_at DESC, b.id DESC`

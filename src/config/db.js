@@ -42,6 +42,10 @@ db.exec(`
     customer_phone TEXT NOT NULL,
     pickup_location TEXT NOT NULL,
     dropoff_location TEXT NOT NULL,
+    delivery_type TEXT NOT NULL DEFAULT 'office',
+    payment_method TEXT NOT NULL DEFAULT 'cash',
+    delivery_fee REAL NOT NULL DEFAULT 0,
+    service_fee REAL NOT NULL DEFAULT 0,
     pickup_date TEXT NOT NULL,
     dropoff_date TEXT NOT NULL,
     total_days INTEGER NOT NULL CHECK(total_days > 0),
@@ -52,5 +56,25 @@ db.exec(`
     FOREIGN KEY (car_id) REFERENCES cars(id) ON DELETE RESTRICT
   );
 `);
+
+function ensureBookingColumns() {
+  const cols = db.prepare('PRAGMA table_info(bookings)').all();
+  const existing = new Set(cols.map((c) => c.name));
+
+  const additions = [
+    ["delivery_type", "TEXT NOT NULL DEFAULT 'office'"],
+    ["payment_method", "TEXT NOT NULL DEFAULT 'cash'"],
+    ["delivery_fee", "REAL NOT NULL DEFAULT 0"],
+    ["service_fee", "REAL NOT NULL DEFAULT 0"]
+  ];
+
+  for (const [colName, colDef] of additions) {
+    if (!existing.has(colName)) {
+      db.exec(`ALTER TABLE bookings ADD COLUMN ${colName} ${colDef};`);
+    }
+  }
+}
+
+ensureBookingColumns();
 
 export default db;

@@ -1,7 +1,11 @@
 const OFFICE_ADDRESS = 'გიორგი აბაშვილის ქუჩა, 3/8';
-const TBILISI_FEE = 25;
-const OUTSIDE_CITY_FEE = 100;
 const SERVICE_FEE_RATE = 0.1; // 10%
+
+const DELIVERY_OPTIONS = {
+  office: { fee: 0 },
+  tbilisi: { fee: 25 },
+  outside: { fee: 100 }
+};
 
 const translations = {
   ka: {
@@ -26,25 +30,25 @@ const translations = {
     seats: 'ადგილი',
     foundCars: (n) => `ნაპოვნია ${n} ავტომობილი`,
     noCars: 'მითითებული პარამეტრებით თავისუფალი ავტომობილი ვერ მოიძებნა.',
-    pickupLocation: 'აყვანის ლოკაცია *',
-    dropoffLocation: 'დაბრუნების ლოკაცია *',
-    officeFreeBtn: 'ოფისი (უფასო)',
-    pickOnMap: 'რუკა (+$25 / +$100)',
+    deliveryTypeLabel: 'მიწოდების ტიპი *',
+    deliveryOffice: 'ოფისიდან წაყვანა და ოფისში დაბრუნება ($0)',
+    deliveryTbilisi: 'მიწოდება და დაბრუნება თბილისის მასშტაბით (+$25)',
+    deliveryOutside: 'მიწოდება / დაბრუნება ქალაქგარეთ / სხვა ქალაქში (+$100)',
+    pickupLocation: 'სად დახვდეს მანქანა (აყვანა) *',
+    dropoffLocation: 'სად ჩააბაროს მანქანა (დაბრუნება) *',
+    pickOnMap: 'რუკა',
     paymentMethodLabel: 'გადახდის მეთოდი (აყვანისას) *',
     paymentCash: 'ქეშით (Cash)',
     paymentCard: 'ბარათით (Card)',
     mapPickerTitle: 'მისამართის არჩევა რუკაზე',
     mapSearchLabel: 'მისამართის ძიება',
-    mapSelectHint: 'დააკლიკეთ რუკაზე პინის დასასმელად (თბილისი: +$25, ქალაქგარეთ/სხვა ქალაქი: +$100).',
+    mapSelectHint: 'დააკლიკეთ რუკაზე პინის დასასმელად ან მოძებნეთ მისამართი.',
     mapLoadingAddress: 'მისამართის განსაზღვრა...',
     mapNotFound: 'მისამართი ვერ მოიძებნა, სცადეთ სხვა ჩანაწერი ან დასვით პინი რუკაზე.',
     confirmLocation: 'ლოკაციის დადასტურება',
-    locationRequiredErr: 'გთხოვთ აირჩიოთ აყვანის ლოკაცია (ოფისი ან რუკაზე).',
-    dropoffInvalidErr: 'გთხოვთ აირჩიოთ დაბრუნების ლოკაცია (ოფისი ან რუკაზე).',
+    locationRequiredErr: 'გთხოვთ აირჩიოთ რუკაზე ადგილი, სად უნდა დახვდეს მანქანა.',
+    dropoffInvalidErr: 'გთხოვთ აირჩიოთ რუკაზე ადგილი, სად უნდა ჩააბაროს მანქანა.',
     mapNotReadyErr: 'რუკის ბიბლიოთეკა ვერ ჩაიტვირთა. განაახლეთ გვერდი.',
-    zoneTbilisi: 'თბილისი',
-    zoneOutside: 'ქალაქგარეთ / სხვა ქალაქი',
-    zoneOffice: 'ოფისი (უფასო)',
     fullName: 'სახელი და გვარი *',
     phone: 'ტელეფონი *',
     email: 'ელ-ფოსტა *',
@@ -57,9 +61,9 @@ const translations = {
     loadBookings: 'ჯავშნების ჩატვირთვა',
     bookingCreated: (code, total) => `ჯავშანი გაფორმდა! კოდი: ${code} | ჯამური თანხა: $${total}`,
     calcSummary: (days, deliveryFee, serviceFee, total) =>
-      `${days} დღე | მიწოდება/ჩაბარება: $${deliveryFee} | Service Fee (10%): $${serviceFee} | ჯამი: $${total}`,
+      `${days} დღე | მიწოდება: $${deliveryFee} | Service Fee (10%): $${serviceFee} | ჯამი: $${total}`,
     calcBaseOnly: (dailyPrice, deliveryFee) =>
-      `ფასი: $${dailyPrice}/დღე | მიწოდება/ჩაბარება: $${deliveryFee} (+10% Service Fee)`
+      `ფასი: $${dailyPrice}/დღე | მიწოდება: $${deliveryFee} (+10% Service Fee)`
   },
   en: {
     navTrack: 'Track Booking',
@@ -83,25 +87,25 @@ const translations = {
     seats: 'seats',
     foundCars: (n) => `${n} vehicle(s) available`,
     noCars: 'No vehicles match your selected criteria.',
-    pickupLocation: 'Pickup Location *',
-    dropoffLocation: 'Drop-off Location *',
-    officeFreeBtn: 'Office (Free)',
-    pickOnMap: 'Map (+$25 / +$100)',
+    deliveryTypeLabel: 'Delivery Type *',
+    deliveryOffice: 'Office pickup & return ($0)',
+    deliveryTbilisi: 'Delivery & return within Tbilisi (+$25)',
+    deliveryOutside: 'Delivery / return outside Tbilisi / other city (+$100)',
+    pickupLocation: 'Where to meet car (Pickup) *',
+    dropoffLocation: 'Where to return car (Drop-off) *',
+    pickOnMap: 'Map',
     paymentMethodLabel: 'Payment Method (At Pickup) *',
     paymentCash: 'Cash',
     paymentCard: 'Card',
     mapPickerTitle: 'Select Address on Map',
     mapSearchLabel: 'Search Address',
-    mapSelectHint: 'Click on the map to drop a pin (Tbilisi: +$25, Outside/Other city: +$100).',
+    mapSelectHint: 'Click on the map to drop a pin or search for an address.',
     mapLoadingAddress: 'Resolving address...',
     mapNotFound: 'Address not found. Try another query or drop a pin directly on the map.',
     confirmLocation: 'Confirm Location',
-    locationRequiredErr: 'Please choose a pickup location (Office or on the map).',
-    dropoffInvalidErr: 'Please choose a drop-off location (Office or on the map).',
+    locationRequiredErr: 'Please pick a pickup location on the map.',
+    dropoffInvalidErr: 'Please pick a drop-off location on the map.',
     mapNotReadyErr: 'Map library failed to load. Please refresh the page.',
-    zoneTbilisi: 'Tbilisi',
-    zoneOutside: 'Outside / Other City',
-    zoneOffice: 'Office (Free)',
     fullName: 'Full Name *',
     phone: 'Phone *',
     email: 'Email *',
@@ -114,9 +118,9 @@ const translations = {
     loadBookings: 'Load Bookings',
     bookingCreated: (code, total) => `Booking confirmed! Code: ${code} | Total: $${total}`,
     calcSummary: (days, deliveryFee, serviceFee, total) =>
-      `${days} day(s) | Delivery/Drop-off: $${deliveryFee} | Service Fee (10%): $${serviceFee} | Total: $${total}`,
+      `${days} day(s) | Delivery: $${deliveryFee} | Service Fee (10%): $${serviceFee} | Total: $${total}`,
     calcBaseOnly: (dailyPrice, deliveryFee) =>
-      `Rate: $${dailyPrice}/day | Delivery/Drop-off: $${deliveryFee} (+10% Service Fee)`
+      `Rate: $${dailyPrice}/day | Delivery: $${deliveryFee} (+10% Service Fee)`
   }
 };
 
@@ -128,7 +132,7 @@ let activeAdminKey = '';
 let leafletMap = null;
 let leafletMarker = null;
 let activeLocationTarget = 'pickup'; // 'pickup' | 'dropoff'
-let pendingPickedLocation = null; // { address, lat, lng, zone, fee }
+let pendingPickedLocation = null; // { address, lat, lng }
 
 const els = {
   carsGrid: document.getElementById('carsGrid'),
@@ -149,21 +153,17 @@ const els = {
   bookingForm: document.getElementById('bookingForm'),
   pickupDateInput: document.getElementById('pickupDateInput'),
   dropoffDateInput: document.getElementById('dropoffDateInput'),
+  deliveryTypeInput: document.getElementById('deliveryTypeInput'),
+  paymentMethodInput: document.getElementById('paymentMethodInput'),
+  mapLocationsBlock: document.getElementById('mapLocationsBlock'),
   pickupLocationInput: document.getElementById('pickupLocationInput'),
   dropoffLocationInput: document.getElementById('dropoffLocationInput'),
   pickupLatInput: document.getElementById('pickupLatInput'),
   pickupLngInput: document.getElementById('pickupLngInput'),
-  pickupZoneInput: document.getElementById('pickupZoneInput'),
-  pickupFeeInput: document.getElementById('pickupFeeInput'),
   dropoffLatInput: document.getElementById('dropoffLatInput'),
   dropoffLngInput: document.getElementById('dropoffLngInput'),
-  dropoffZoneInput: document.getElementById('dropoffZoneInput'),
-  dropoffFeeInput: document.getElementById('dropoffFeeInput'),
-  setPickupOfficeBtn: document.getElementById('setPickupOfficeBtn'),
   pickPickupMapBtn: document.getElementById('pickPickupMapBtn'),
-  setDropoffOfficeBtn: document.getElementById('setDropoffOfficeBtn'),
   pickDropoffMapBtn: document.getElementById('pickDropoffMapBtn'),
-  paymentMethodInput: document.getElementById('paymentMethodInput'),
   mapModal: document.getElementById('mapModal'),
   mapSearchInput: document.getElementById('mapSearchInput'),
   mapSearchBtn: document.getElementById('mapSearchBtn'),
@@ -211,65 +211,38 @@ function applyTranslations() {
   updatePricePreview();
 }
 
-function classifyLocationZone(lat, lng, addressText = '', nominatimAddress = null) {
-  const addrStr = `${addressText} ${JSON.stringify(nominatimAddress || {})}`.toLowerCase();
-  const mentionsTbilisi =
-    addrStr.includes('თბილისი') ||
-    addrStr.includes('tbilisi') ||
-    addrStr.includes('тбилиси');
-
-  const mentionsOtherCity =
-    addrStr.includes('ბათუმი') ||
-    addrStr.includes('batumi') ||
-    addrStr.includes('ქუთაისი') ||
-    addrStr.includes('kutaisi') ||
-    addrStr.includes('რუსთავი') ||
-    addrStr.includes('rustavi') ||
-    addrStr.includes('გორი') ||
-    addrStr.includes('gori') ||
-    addrStr.includes('თელავი') ||
-    addrStr.includes('telavi') ||
-    addrStr.includes('ზუგდიდი') ||
-    addrStr.includes('zugdidi') ||
-    addrStr.includes('მცხეთა') ||
-    addrStr.includes('mtskheta');
-
-  // Greater Tbilisi bounding box check
-  const inTbilisiBounds = lat >= 41.62 && lat <= 41.84 && lng >= 44.65 && lng <= 45.02;
-
-  if (!mentionsOtherCity && (mentionsTbilisi || inTbilisiBounds)) {
-    return { zone: 'tbilisi', fee: TBILISI_FEE };
-  }
-  return { zone: 'outside', fee: OUTSIDE_CITY_FEE };
+function getDeliveryFee() {
+  const type = els.deliveryTypeInput?.value || 'office';
+  return DELIVERY_OPTIONS[type]?.fee ?? 0;
 }
 
-function formatZoneLabel(zone) {
-  if (zone === 'office') return t('zoneOffice');
-  if (zone === 'tbilisi') return `${t('zoneTbilisi')} (+$${TBILISI_FEE})`;
-  return `${t('zoneOutside')} (+$${OUTSIDE_CITY_FEE})`;
-}
+function syncDeliveryTypeUI() {
+  const type = els.deliveryTypeInput?.value || 'office';
+  const isOffice = type === 'office';
 
-function setOfficeLocation(target) {
-  if (target === 'pickup') {
+  if (isOffice) {
+    els.mapLocationsBlock?.classList.add('hidden');
     els.pickupLocationInput.value = OFFICE_ADDRESS;
+    els.dropoffLocationInput.value = OFFICE_ADDRESS;
     els.pickupLatInput.value = '';
     els.pickupLngInput.value = '';
-    els.pickupZoneInput.value = 'office';
-    els.pickupFeeInput.value = '0';
-  } else {
-    els.dropoffLocationInput.value = OFFICE_ADDRESS;
     els.dropoffLatInput.value = '';
     els.dropoffLngInput.value = '';
-    els.dropoffZoneInput.value = 'office';
-    els.dropoffFeeInput.value = '0';
+  } else {
+    els.mapLocationsBlock?.classList.remove('hidden');
+    if (els.pickupLocationInput.value === OFFICE_ADDRESS) {
+      els.pickupLocationInput.value = '';
+      els.pickupLatInput.value = '';
+      els.pickupLngInput.value = '';
+    }
+    if (els.dropoffLocationInput.value === OFFICE_ADDRESS) {
+      els.dropoffLocationInput.value = '';
+      els.dropoffLatInput.value = '';
+      els.dropoffLngInput.value = '';
+    }
   }
-  updatePricePreview();
-}
 
-function getDeliveryFee() {
-  const pFee = Number(els.pickupFeeInput.value) || 0;
-  const dFee = Number(els.dropoffFeeInput.value) || 0;
-  return pFee + dFee;
+  updatePricePreview();
 }
 
 function calculateBookingAmounts() {
@@ -281,6 +254,7 @@ function calculateBookingAmounts() {
   if (!selectedCar || diffDays <= 0) {
     return {
       diffDays: 0,
+      baseRental: 0,
       deliveryFee,
       subtotal: 0,
       serviceFee: 0,
@@ -288,13 +262,14 @@ function calculateBookingAmounts() {
     };
   }
 
-  const baseRental = diffDays * Number(selectedCar.daily_price || 0);
+  const baseRental = Number((diffDays * Number(selectedCar.daily_price || 0)).toFixed(2));
   const subtotal = Number((baseRental + deliveryFee).toFixed(2));
   const serviceFee = Number((subtotal * SERVICE_FEE_RATE).toFixed(2));
   const total = Number((subtotal + serviceFee).toFixed(2));
 
   return {
     diffDays,
+    baseRental,
     deliveryFee,
     subtotal,
     serviceFee,
@@ -331,17 +306,15 @@ async function reverseGeocodeLeaflet(lat, lng) {
     if (!res.ok) throw new Error('Reverse geocode failed');
     const data = await res.json();
     const address = data.display_name || fallbackLabel;
-    const { zone, fee } = classifyLocationZone(lat, lng, address, data.address);
-    pendingPickedLocation = { address, lat, lng, zone, fee };
-    els.mapSelectedSummary.textContent = `${address} (${lat.toFixed(5)}, ${lng.toFixed(5)}) — ${formatZoneLabel(zone)}`;
+    pendingPickedLocation = { address, lat, lng };
+    els.mapSelectedSummary.textContent = `${address} (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
   } catch {
-    const { zone, fee } = classifyLocationZone(lat, lng, fallbackLabel);
-    pendingPickedLocation = { address: fallbackLabel, lat, lng, zone, fee };
-    els.mapSelectedSummary.textContent = `${fallbackLabel} — ${formatZoneLabel(zone)}`;
+    pendingPickedLocation = { address: fallbackLabel, lat, lng };
+    els.mapSelectedSummary.textContent = fallbackLabel;
   }
 }
 
-function placeLeafletPin(lat, lng, presetAddress = '', presetAddrObj = null) {
+function placeLeafletPin(lat, lng, presetAddress = '') {
   if (!leafletMap) return;
 
   if (!leafletMarker) {
@@ -357,9 +330,8 @@ function placeLeafletPin(lat, lng, presetAddress = '', presetAddrObj = null) {
   leafletMap.panTo([lat, lng]);
 
   if (presetAddress) {
-    const { zone, fee } = classifyLocationZone(lat, lng, presetAddress, presetAddrObj);
-    pendingPickedLocation = { address: presetAddress, lat, lng, zone, fee };
-    els.mapSelectedSummary.textContent = `${presetAddress} (${lat.toFixed(5)}, ${lng.toFixed(5)}) — ${formatZoneLabel(zone)}`;
+    pendingPickedLocation = { address: presetAddress, lat, lng };
+    els.mapSelectedSummary.textContent = `${presetAddress} (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
   } else {
     reverseGeocodeLeaflet(lat, lng);
   }
@@ -371,7 +343,7 @@ async function searchAddressOnMap() {
 
   els.mapSelectedSummary.textContent = t('mapLoadingAddress');
   try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=1&q=${encodeURIComponent(query)}&accept-language=${currentLang}`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}&accept-language=${currentLang}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('Search failed');
     const results = await res.json();
@@ -384,8 +356,9 @@ async function searchAddressOnMap() {
     const best = results[0];
     const lat = Number(best.lat);
     const lng = Number(best.lon);
-    leafletMap.setView([lat, lng], 14);
-    placeLeafletPin(lat, lng, best.display_name, best.address || null);
+    const zoomLevel = els.deliveryTypeInput?.value === 'outside' ? 10 : 15;
+    leafletMap.setView([lat, lng], zoomLevel);
+    placeLeafletPin(lat, lng, best.display_name);
   } catch {
     els.mapSelectedSummary.textContent = t('mapNotFound');
   }
@@ -407,11 +380,13 @@ function openMapForTarget(target) {
   els.mapSearchInput.value = '';
   els.mapSelectedSummary.textContent = t('mapSelectHint');
 
+  const isOutside = els.deliveryTypeInput?.value === 'outside';
+  const initialCenter = isOutside ? [41.8, 43.4] : [41.7151, 44.8271];
+  const initialZoom = isOutside ? 7 : 12;
+
   setTimeout(() => {
     leafletMap.invalidateSize();
 
-    const zone =
-      target === 'pickup' ? els.pickupZoneInput.value : els.dropoffZoneInput.value;
     const existingLat =
       target === 'pickup' ? Number(els.pickupLatInput.value) : Number(els.dropoffLatInput.value);
     const existingLng =
@@ -419,21 +394,20 @@ function openMapForTarget(target) {
     const existingAddr =
       target === 'pickup' ? els.pickupLocationInput.value : els.dropoffLocationInput.value;
 
-    if (zone !== 'office' && Number.isFinite(existingLat) && Number.isFinite(existingLng) && existingLat !== 0 && existingLng !== 0) {
-      leafletMap.setView([existingLat, existingLng], 14);
+    if (Number.isFinite(existingLat) && Number.isFinite(existingLng) && existingLat !== 0 && existingLng !== 0) {
+      leafletMap.setView([existingLat, existingLng], isOutside ? 11 : 15);
       placeLeafletPin(existingLat, existingLng, existingAddr);
     } else {
       if (leafletMarker) {
         leafletMap.removeLayer(leafletMarker);
         leafletMarker = null;
       }
-      leafletMap.setView([41.7151, 44.8271], 12);
+      leafletMap.setView(initialCenter, initialZoom);
     }
   }, 60);
 }
 
-els.setPickupOfficeBtn?.addEventListener('click', () => setOfficeLocation('pickup'));
-els.setDropoffOfficeBtn?.addEventListener('click', () => setOfficeLocation('dropoff'));
+els.deliveryTypeInput?.addEventListener('change', syncDeliveryTypeUI);
 
 els.pickPickupMapBtn?.addEventListener('click', () => openMapForTarget('pickup'));
 els.pickupLocationInput?.addEventListener('click', () => openMapForTarget('pickup'));
@@ -459,17 +433,12 @@ els.confirmMapLocationBtn?.addEventListener('click', () => {
     els.pickupLocationInput.value = pendingPickedLocation.address;
     els.pickupLatInput.value = String(pendingPickedLocation.lat);
     els.pickupLngInput.value = String(pendingPickedLocation.lng);
-    els.pickupZoneInput.value = pendingPickedLocation.zone;
-    els.pickupFeeInput.value = String(pendingPickedLocation.fee);
   } else {
     els.dropoffLocationInput.value = pendingPickedLocation.address;
     els.dropoffLatInput.value = String(pendingPickedLocation.lat);
     els.dropoffLngInput.value = String(pendingPickedLocation.lng);
-    els.dropoffZoneInput.value = pendingPickedLocation.zone;
-    els.dropoffFeeInput.value = String(pendingPickedLocation.fee);
   }
 
-  updatePricePreview();
   els.mapModal.classList.add('hidden');
 });
 
@@ -551,14 +520,13 @@ async function openBooking(carId) {
   els.bookingMessage.className = 'feedback';
   els.bookingMessage.textContent = '';
 
-  setOfficeLocation('pickup');
-  setOfficeLocation('dropoff');
+  if (els.deliveryTypeInput) els.deliveryTypeInput.value = 'office';
   if (els.paymentMethodInput) els.paymentMethodInput.value = 'cash';
 
   if (els.filterPickup?.value) els.pickupDateInput.value = els.filterPickup.value;
   if (els.filterDropoff?.value) els.dropoffDateInput.value = els.filterDropoff.value;
 
-  updatePricePreview();
+  syncDeliveryTypeUI();
   els.bookingModal.classList.remove('hidden');
 }
 
@@ -594,57 +562,65 @@ els.bookingForm?.addEventListener('submit', async (e) => {
   els.bookingMessage.className = 'feedback';
   els.bookingMessage.textContent = '';
 
-  const pickupAddress = els.pickupLocationInput.value.trim();
-  const pickupZone = els.pickupZoneInput.value;
-  const pickupLat = Number(els.pickupLatInput.value);
-  const pickupLng = Number(els.pickupLngInput.value);
+  const deliveryType = els.deliveryTypeInput?.value || 'office';
+  const isOffice = deliveryType === 'office';
 
-  const hasValidPickup =
-    pickupAddress.length > 0 &&
-    (pickupZone === 'office' ||
-      (Number.isFinite(pickupLat) &&
-        Number.isFinite(pickupLng) &&
-        Math.abs(pickupLat) <= 90 &&
-        Math.abs(pickupLng) <= 180));
+  const pickupAddress = isOffice ? OFFICE_ADDRESS : els.pickupLocationInput.value.trim();
+  const dropoffAddress = isOffice ? OFFICE_ADDRESS : els.dropoffLocationInput.value.trim();
 
-  if (!hasValidPickup) {
-    els.bookingMessage.className = 'feedback err';
-    els.bookingMessage.textContent = t('locationRequiredErr');
-    return;
-  }
+  if (!isOffice) {
+    const pLat = Number(els.pickupLatInput.value);
+    const pLng = Number(els.pickupLngInput.value);
+    const hasPickup =
+      pickupAddress.length > 0 &&
+      Number.isFinite(pLat) &&
+      Number.isFinite(pLng) &&
+      Math.abs(pLat) <= 90 &&
+      Math.abs(pLng) <= 180;
 
-  const dropoffAddress = els.dropoffLocationInput.value.trim();
-  const dropoffZone = els.dropoffZoneInput.value;
-  const dropoffLat = Number(els.dropoffLatInput.value);
-  const dropoffLng = Number(els.dropoffLngInput.value);
+    if (!hasPickup) {
+      els.bookingMessage.className = 'feedback err';
+      els.bookingMessage.textContent = t('locationRequiredErr');
+      return;
+    }
 
-  const hasValidDropoff =
-    dropoffAddress.length > 0 &&
-    (dropoffZone === 'office' ||
-      (Number.isFinite(dropoffLat) &&
-        Number.isFinite(dropoffLng) &&
-        Math.abs(dropoffLat) <= 90 &&
-        Math.abs(dropoffLng) <= 180));
+    const dLat = Number(els.dropoffLatInput.value);
+    const dLng = Number(els.dropoffLngInput.value);
+    const hasDropoff =
+      dropoffAddress.length > 0 &&
+      Number.isFinite(dLat) &&
+      Number.isFinite(dLng) &&
+      Math.abs(dLat) <= 90 &&
+      Math.abs(dLng) <= 180;
 
-  if (!hasValidDropoff) {
-    els.bookingMessage.className = 'feedback err';
-    els.bookingMessage.textContent = t('dropoffInvalidErr');
-    return;
+    if (!hasDropoff) {
+      els.bookingMessage.className = 'feedback err';
+      els.bookingMessage.textContent = t('dropoffInvalidErr');
+      return;
+    }
   }
 
   const calc = calculateBookingAmounts();
   const paymentMethod = els.paymentMethodInput?.value || 'cash';
-  const paymentLabel = paymentMethod === 'card' ? 'Card (ბარათით აყვანისას)' : 'Cash (ქეშით აყვანისას)';
+  const paymentLabel = paymentMethod === 'card' ? 'ბარათით (Card — აყვანისას)' : 'ქეშით (Cash — აყვანისას)';
 
-  const summaryNote =
-    `Payment: ${paymentLabel} | ` +
-    `Pickup: ${pickupAddress} [${formatZoneLabel(pickupZone)}] | ` +
-    `Drop-off: ${dropoffAddress} [${formatZoneLabel(dropoffZone)}] | ` +
-    `Delivery/Drop-off fee: $${calc.deliveryFee} | ` +
-    `Service Fee (10%): $${calc.serviceFee.toFixed(2)}`;
+  const deliveryLabel =
+    deliveryType === 'office'
+      ? 'ოფისიდან წაყვანა და ოფისში დაბრუნება ($0)'
+      : deliveryType === 'tbilisi'
+        ? 'მიწოდება და დაბრუნება თბილისის მასშტაბით (+$25)'
+        : 'მიწოდება / დაბრუნება ქალაქგარეთ / სხვა ქალაქში (+$100)';
 
-  const userNotes = els.notesInput.value.trim();
-  const combinedNotes = userNotes ? `${summaryNote} | Note: ${userNotes}` : summaryNote;
+  const detailedInfo = [
+    `გადახდა აყვანისას: ${paymentLabel}`,
+    `მიწოდების ტიპი: ${deliveryLabel}`,
+    `სად დახვდეს მანქანა: ${pickupAddress}`,
+    `სად ჩააბაროს მანქანა: ${dropoffAddress}`,
+    `ქირის დღეები: ${calc.diffDays} დღე | ქირა: $${calc.baseRental.toFixed(2)} | მიწოდება: $${calc.deliveryFee.toFixed(2)} | Service Fee (10%): $${calc.serviceFee.toFixed(2)} | სულ: $${calc.total.toFixed(2)}`
+  ].join(' | ');
+
+  const userNote = els.notesInput.value.trim();
+  const combinedNotes = userNote ? `${detailedInfo} | შენიშვნა: ${userNote}` : detailedInfo;
 
   const payload = {
     car_id: Number(els.bookingCarId.value),
@@ -652,6 +628,7 @@ els.bookingForm?.addEventListener('submit', async (e) => {
     dropoff_date: els.dropoffDateInput.value,
     pickup_location: pickupAddress,
     dropoff_location: dropoffAddress,
+    delivery_type: deliveryType,
     payment_method: paymentMethod,
     delivery_fee: calc.deliveryFee,
     service_fee: calc.serviceFee,
@@ -678,8 +655,9 @@ els.bookingForm?.addEventListener('submit', async (e) => {
   els.bookingMessage.className = 'feedback ok';
   els.bookingMessage.textContent = t('bookingCreated', json.data.booking_code, json.data.total_price);
   els.bookingForm.reset();
-  setOfficeLocation('pickup');
-  setOfficeLocation('dropoff');
+  if (els.deliveryTypeInput) els.deliveryTypeInput.value = 'office';
+  if (els.paymentMethodInput) els.paymentMethodInput.value = 'cash';
+  syncDeliveryTypeUI();
   fetchAndRenderCars();
 });
 
@@ -746,28 +724,51 @@ function renderAdminBookings(bookings) {
 
   els.adminBookingsList.innerHTML = bookings
     .map((b) => {
-      const paymentText =
+      const paymentLabel =
         b.payment_method === 'card'
           ? 'ბარათით (Card — აყვანისას)'
           : b.payment_method === 'cash'
             ? 'ქეშით (Cash — აყვანისას)'
-            : 'მითითებულია დეტალებში / აყვანისას';
+            : 'მითითებულია დეტალებში (აყვანისას)';
+
+      const deliveryLabel =
+        b.delivery_type === 'tbilisi'
+          ? 'მიწოდება და დაბრუნება თბილისში (+$25)'
+          : b.delivery_type === 'outside'
+            ? 'მიწოდება / დაბრუნება ქალაქგარეთ / სხვა ქალაქში (+$100)'
+            : b.delivery_type === 'office'
+              ? 'ოფისიდან წაყვანა და ოფისში დაბრუნება ($0)'
+              : 'იხ. დეტალები / მისამართები';
+
+      const pickupPlace = b.pickup_location || OFFICE_ADDRESS;
+      const dropoffPlace = b.dropoff_location || pickupPlace;
 
       return `
       <div class="booking-item">
-        <div>
-          <strong>${b.booking_code}</strong> • ${b.customer_name} (${b.customer_phone} | ${b.customer_email || ''})<br />
-          <span class="muted">${b.brand} ${b.model} (${b.year || ''}) | ${b.pickup_date} → ${b.dropoff_date} | $${b.total_price}</span>
-          <div class="admin-booking-details">
-            <div><strong>აყვანა:</strong> ${b.pickup_location || '—'}</div>
-            <div><strong>ჩაბარება:</strong> ${b.dropoff_location || b.pickup_location || '—'}</div>
-            <div><strong>გადახდა:</strong> ${paymentText}</div>
-            ${b.notes ? `<div><strong>დეტალები / შენიშვნა:</strong> ${b.notes}</div>` : ''}
+        <div class="admin-booking-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div>
+              <strong>${b.booking_code}</strong> • <strong>${b.customer_name}</strong>
+              <span class="muted">(${b.brand} ${b.model}${b.year ? ` ${b.year}` : ''})</span>
+            </div>
+            <select class="admin-status-select" data-booking-id="${b.id}">
+              ${statuses.map((st) => `<option value="${st}" ${b.status === st ? 'selected' : ''}>${st}</option>`).join('')}
+            </select>
           </div>
+
+          <div class="admin-booking-grid">
+            <div><strong>თარიღები:</strong> ${b.pickup_date} → ${b.dropoff_date}${b.total_days ? ` (${b.total_days} დღე)` : ''}</div>
+            <div><strong>ჯამური თანხა:</strong> $${b.total_price}</div>
+            <div><strong>ტელეფონი:</strong> ${b.customer_phone || '—'}</div>
+            <div><strong>ელ-ფოსტა:</strong> ${b.customer_email || '—'}</div>
+            <div><strong>გადახდის მეთოდი:</strong> ${paymentLabel}</div>
+            <div><strong>მიწოდების ტიპი:</strong> ${deliveryLabel}</div>
+            <div><strong>სად დახვდეს მანქანა:</strong> ${pickupPlace}</div>
+            <div><strong>სად ჩააბაროს მანქანა:</strong> ${dropoffPlace}</div>
+          </div>
+
+          ${b.notes ? `<div class="admin-note-box"><strong>სრული დეტალები / შენიშვნა:</strong> ${b.notes}</div>` : ''}
         </div>
-        <select class="admin-status-select" data-booking-id="${b.id}">
-          ${statuses.map((st) => `<option value="${st}" ${b.status === st ? 'selected' : ''}>${st}</option>`).join('')}
-        </select>
       </div>
     `;
     })
