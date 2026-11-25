@@ -22,10 +22,13 @@
       display: flex;
       gap: 8px;
       align-items: center;
+      flex-wrap: wrap;
     }
     .map-input-row input[readonly] {
       background-color: rgba(128, 128, 128, 0.08);
       cursor: pointer;
+      flex: 1;
+      min-width: 160px;
     }
     .map-picker-box {
       display: flex;
@@ -51,6 +54,11 @@
       padding: 8px 10px;
       border-radius: 8px;
       background: rgba(128, 128, 128, 0.08);
+    }
+    .admin-booking-details {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      line-height: 1.5;
     }
   </style>
 </head>
@@ -152,8 +160,12 @@
         <input type="hidden" id="bookingCarId" />
         <input type="hidden" id="pickupLatInput" />
         <input type="hidden" id="pickupLngInput" />
+        <input type="hidden" id="pickupZoneInput" value="office" />
+        <input type="hidden" id="pickupFeeInput" value="0" />
         <input type="hidden" id="dropoffLatInput" />
         <input type="hidden" id="dropoffLngInput" />
+        <input type="hidden" id="dropoffZoneInput" value="office" />
+        <input type="hidden" id="dropoffFeeInput" value="0" />
         <p id="bookingCarSummary" class="car-summary"></p>
 
         <div class="form-grid">
@@ -165,7 +177,8 @@
             <label for="dropoffDateInput" data-i18n="dropoffDate">დაბრუნების თარიღი *</label>
             <input type="date" id="dropoffDateInput" required />
           </div>
-          <div class="field">
+
+          <div class="field full-span">
             <label for="pickupLocationInput" data-i18n="pickupLocation">აყვანის ლოკაცია *</label>
             <div class="map-input-row">
               <input
@@ -173,24 +186,44 @@
                 id="pickupLocationInput"
                 readonly
                 required
-                placeholder="აირჩიეთ რუკაზე..."
+                placeholder="აირჩიეთ ოფისი ან რუკაზე..."
               />
-              <button type="button" class="btn btn-outline" id="pickPickupMapBtn" data-i18n="pickOnMap">რუკა</button>
+              <button type="button" class="btn btn-ghost" id="setPickupOfficeBtn" data-i18n="officeFreeBtn">
+                ოფისი (უფასო)
+              </button>
+              <button type="button" class="btn btn-outline" id="pickPickupMapBtn" data-i18n="pickOnMap">
+                რუკა (+$25 / +$100)
+              </button>
             </div>
           </div>
-          <div class="field">
-            <label for="dropoffLocationInput" data-i18n="dropoffLocation">დაბრუნების ლოკაცია</label>
+
+          <div class="field full-span">
+            <label for="dropoffLocationInput" data-i18n="dropoffLocation">დაბრუნების ლოკაცია *</label>
             <div class="map-input-row">
               <input
                 type="text"
                 id="dropoffLocationInput"
                 readonly
-                placeholder="იგივე ან აირჩიეთ რუკაზე"
+                required
+                placeholder="აირჩიეთ ოფისი ან რუკაზე..."
               />
-              <button type="button" class="btn btn-outline" id="pickDropoffMapBtn" data-i18n="pickOnMap">რუკა</button>
-              <button type="button" class="btn btn-ghost" id="clearDropoffMapBtn" title="Clear">&times;</button>
+              <button type="button" class="btn btn-ghost" id="setDropoffOfficeBtn" data-i18n="officeFreeBtn">
+                ოფისი (უფასო)
+              </button>
+              <button type="button" class="btn btn-outline" id="pickDropoffMapBtn" data-i18n="pickOnMap">
+                რუკა (+$25 / +$100)
+              </button>
             </div>
           </div>
+
+          <div class="field">
+            <label for="paymentMethodInput" data-i18n="paymentMethodLabel">გადახდის მეთოდი (აყვანისას) *</label>
+            <select id="paymentMethodInput" required>
+              <option value="cash" data-i18n="paymentCash">ქეშით (Cash)</option>
+              <option value="card" data-i18n="paymentCard">ბარათით (Card)</option>
+            </select>
+          </div>
+
           <div class="field">
             <label for="customerNameInput" data-i18n="fullName">სახელი და გვარი *</label>
             <input type="text" id="customerNameInput" required />
@@ -231,13 +264,13 @@
         <div class="field">
           <label for="mapSearchInput" data-i18n="mapSearchLabel">მისამართის ძიება</label>
           <div class="map-search-row">
-            <input type="text" id="mapSearchInput" placeholder="მაგ: რუსთაველის გამზირი, თბილისი" />
+            <input type="text" id="mapSearchInput" placeholder="მაგ: რუსთაველის გამზირი, თბილისი ან ბათუმი" />
             <button type="button" class="btn btn-outline" id="mapSearchBtn" data-i18n="searchCars">მოძებნა</button>
           </div>
         </div>
         <div id="leafletMapCanvas" class="map-canvas"></div>
         <div id="mapSelectedSummary" class="map-selected-info muted" data-i18n="mapSelectHint">
-          დააკლიკეთ რუკაზე პინის დასასმელად ან მოძებნეთ მისამართი.
+          დააკლიკეთ რუკაზე პინის დასასმელად (თბილისი: +$25, ქალაქგარეთ/სხვა ქალაქი: +$100).
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-ghost" data-close="mapModal" data-i18n="cancel">გაუქმება</button>
