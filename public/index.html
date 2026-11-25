@@ -102,6 +102,32 @@
       color: inherit;
     }
 
+    .price-breakdown-box {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: rgba(128, 128, 128, 0.08);
+      border: 1px solid rgba(128, 128, 128, 0.16);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+    .price-breakdown-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 2px 0;
+    }
+    .price-breakdown-total {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(128, 128, 128, 0.22);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
     .map-picker-box {
       display: flex;
       flex-direction: column;
@@ -261,53 +287,44 @@
           </div>
 
           <div class="field">
-            <label for="deliveryTypeInput" data-i18n="deliveryTypeLabel">მიწოდების ტიპი *</label>
-            <select id="deliveryTypeInput" required>
-              <option value="office" data-i18n="deliveryOffice">
-                ოფისიდან წაყვანა და ოფისში დაბრუნება ($0)
-              </option>
-              <option value="tbilisi" data-i18n="deliveryTbilisi">
-                მიწოდება და დაბრუნება თბილისის მასშტაბით (+$25)
-              </option>
-              <option value="outside" data-i18n="deliveryOutside">
-                მიწოდება / დაბრუნება ქალაქგარეთ / სხვა ქალაქში (+$100)
-              </option>
+            <label for="pickupDeliveryTypeInput" data-i18n="pickupTypeLabel">აყვანის ტიპი *</label>
+            <select id="pickupDeliveryTypeInput" required>
+              <option value="office" data-i18n="pickupOffice">ოფისიდან წაყვანა ($0)</option>
+              <option value="tbilisi" data-i18n="pickupTbilisi">მიწოდება თბილისში (+$25)</option>
+              <option value="outside" data-i18n="pickupOutside">მიწოდება ქალაქგარეთ / სხვა ქალაქში (+$100)</option>
             </select>
           </div>
 
           <div class="field">
-            <label for="paymentMethodInput" data-i18n="paymentMethodLabel">გადახდის მეთოდი (აყვანისას) *</label>
-            <select id="paymentMethodInput" required>
-              <option value="cash" data-i18n="paymentCash">ქეშით (Cash)</option>
-              <option value="card" data-i18n="paymentCard">ბარათით (Card)</option>
+            <label for="dropoffDeliveryTypeInput" data-i18n="dropoffTypeLabel">დაბრუნების ტიპი *</label>
+            <select id="dropoffDeliveryTypeInput" required>
+              <option value="office" data-i18n="dropoffOffice">ოფისში დაბრუნება ($0)</option>
+              <option value="tbilisi" data-i18n="dropoffTbilisi">დაბრუნება თბილისში (+$25)</option>
+              <option value="outside" data-i18n="dropoffOutside">დაბრუნება ქალაქგარეთ / სხვა ქალაქში (+$100)</option>
             </select>
           </div>
 
-          <div class="field full-span" id="mapLocationsBlock">
-            <div class="form-grid">
-              <div class="field">
-                <label for="pickupLocationInput" data-i18n="pickupLocation">სად დახვდეს მანქანა (აყვანა) *</label>
-                <div class="map-input-row">
-                  <input
-                    type="text"
-                    id="pickupLocationInput"
-                    readonly
-                    placeholder="დასვით პინი რუკაზე..."
-                  />
-                </div>
-              </div>
+          <div class="field hidden" id="pickupMapField">
+            <label for="pickupLocationInput" data-i18n="pickupLocation">სად დახვდეს მანქანა (აყვანა) *</label>
+            <div class="map-input-row">
+              <input
+                type="text"
+                id="pickupLocationInput"
+                readonly
+                placeholder="დასვით პინი რუკაზე..."
+              />
+            </div>
+          </div>
 
-              <div class="field">
-                <label for="dropoffLocationInput" data-i18n="dropoffLocation">სად ჩააბაროს მანქანა (დაბრუნება) *</label>
-                <div class="map-input-row">
-                  <input
-                    type="text"
-                    id="dropoffLocationInput"
-                    readonly
-                    placeholder="დასვით პინი რუკაზე..."
-                  />
-                </div>
-              </div>
+          <div class="field hidden" id="dropoffMapField">
+            <label for="dropoffLocationInput" data-i18n="dropoffLocation">სად ჩააბაროს მანქანა (დაბრუნება) *</label>
+            <div class="map-input-row">
+              <input
+                type="text"
+                id="dropoffLocationInput"
+                readonly
+                placeholder="დასვით პინი რუკაზე..."
+              />
             </div>
           </div>
 
@@ -315,6 +332,7 @@
             <label for="customerNameInput" data-i18n="fullName">სახელი და გვარი *</label>
             <input type="text" id="customerNameInput" required />
           </div>
+
           <div class="field">
             <label for="customerPhoneInput" data-i18n="phone">ტელეფონი *</label>
             <div class="phone-combined-box">
@@ -353,21 +371,30 @@
                 id="customerPhoneInput"
                 class="phone-number-input"
                 required
-                placeholder="555 55 55 55"
               />
             </div>
           </div>
-          <div class="field full-span">
+
+          <div class="field">
             <label for="customerEmailInput" data-i18n="email">ელ-ფოსტა *</label>
             <input type="email" id="customerEmailInput" required placeholder="name@example.com" />
           </div>
+
+          <div class="field">
+            <label for="paymentMethodInput" data-i18n="paymentMethodLabel">გადახდის მეთოდი (აყვანისას) *</label>
+            <select id="paymentMethodInput" required>
+              <option value="cash" data-i18n="paymentCash">ქეშით (Cash)</option>
+              <option value="card" data-i18n="paymentCard">ბარათით (Card)</option>
+            </select>
+          </div>
+
           <div class="field full-span">
             <label for="notesInput" data-i18n="notes">დამატებითი შენიშვნა</label>
             <textarea id="notesInput" rows="2"></textarea>
           </div>
         </div>
 
-        <div class="price-preview" id="pricePreview"></div>
+        <div class="price-breakdown-box" id="pricePreview"></div>
         <div id="bookingMessage" class="feedback"></div>
 
         <div class="modal-footer">

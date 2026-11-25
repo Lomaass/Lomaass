@@ -4,7 +4,7 @@ import db from '../config/db.js';
 const ALLOWED_STATUSES = ['pending', 'confirmed', 'active', 'completed', 'cancelled'];
 const OFFICE_ADDRESS = 'გიორგი აბაშვილის ქუჩა, 3/8';
 const SERVICE_FEE_RATE = 0.1; // 10%
-const DELIVERY_FEES = {
+const LOCATION_FEES = {
   office: 0,
   tbilisi: 25,
   outside: 100
@@ -38,26 +38,38 @@ function generateBookingCode() {
   return `WCR-${random}`;
 }
 
+function resolveLocationType(primaryVal, fallbackVal) {
+  const candidate = String(primaryVal || fallbackVal || 'office').trim().toLowerCase();
+  return Object.hasOwn(LOCATION_FEES, candidate) ? candidate : 'office';
+}
+
+function summarizeCombinedDeliveryType(pickupType, dropoffType) {
+  if (pickupType === 'office' && dropoffType === 'office') return 'office';
+  if (pickupType === 'outside' || dropoffType === 'outside') return 'outside';
+  return 'tbilisi';
+}
+
 export function createBooking(payload) {
   const carId = Number(payload?.car_id);
   const pickupDate = String(payload?.pickup_date || '').trim().slice(0, 10);
   const dropoffDate = String(payload?.dropoff_date || '').trim().slice(0, 10);
 
-  const rawDeliveryType = String(payload?.delivery_type || 'office').trim().toLowerCase();
-  const deliveryType = Object.hasOwn(DELIVERY_FEES, rawDeliveryType) ? rawDeliveryType : 'office';
+  const pickupDeliveryType = resolveLocationType(payload?.pickup_delivery_type, payload?.delivery_type);
+  const dropoffDeliveryType = resolveLocationType(payload?.dropoff_delivery_type, payload?.delivery_type);
+  const deliveryType = summarizeCombinedDeliveryType(pickupDeliveryType, dropoffDeliveryType);
 
   const rawPaymentMethod = String(payload?.payment_method || 'cash').trim().toLowerCase();
   const paymentMethod = rawPaymentMethod === 'card' ? 'card' : 'cash';
 
   const pickupLocation =
-    deliveryType === 'office'
+    pickupDeliveryType === 'office'
       ? OFFICE_ADDRESS
       : String(payload?.pickup_location || '').trim();
 
   const dropoffLocation =
-    deliveryType === 'office'
+    dropoffDeliveryType === 'office'
       ? OFFICE_ADDRESS
-      : String(payload?.dropoff_location || pickupLocation).trim();
+      : String(payload?.dropoff_location || '').trim();
 
   const customerName = String(payload?.customer_name || '').trim();
   const customerPhone = String(payload?.customer_phone || '').trim();
@@ -117,7 +129,9 @@ export function createBooking(payload) {
   }
 
   const baseRental = Number((days * Number(car.daily_price)).toFixed(2));
-  const deliveryFee = Number(DELIVERY_FEES[deliveryType].toFixed(2));
+  const pickupDeliveryFee = Number(LOCATION_FEES[pickupDeliveryType].toFixed(2));
+  const dropoffDeliveryFee = Number(LOCATION_FEES[dropoffDeliveryType].toFixed(2));
+  const deliveryFee = Number((pickupDeliveryFee + dropoffDeliveryFee).toFixed(2));
   const subtotal = Number((baseRental + deliveryFee).toFixed(2));
   const serviceFee = Number((subtotal * SERVICE_FEE_RATE).toFixed(2));
   const totalPrice = Number((subtotal + serviceFee).toFixed(2));
@@ -135,8 +149,12 @@ export function createBooking(payload) {
       dropoff_date,
       pickup_location,
       dropoff_location,
+      pickup_delivery_type,
+      dropoff_delivery_type,
       delivery_type,
       payment_method,
+      pickup_delivery_fee,
+      dropoff_delivery_fee,
       delivery_fee,
       service_fee,
       customer_name,
@@ -146,7 +164,7 @@ export function createBooking(payload) {
       total_days,
       total_price,
       status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
   `);
 
   const result = insertStmt.run(
@@ -156,8 +174,12 @@ export function createBooking(payload) {
     dropoffDate,
     pickupLocation,
     dropoffLocation,
+    pickupDeliveryType,
+    dropoffDeliveryType,
     deliveryType,
     paymentMethod,
+    pickupDeliveryFee,
+    dropoffDeliveryFee,
     deliveryFee,
     serviceFee,
     customerName,

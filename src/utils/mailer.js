@@ -7,10 +7,22 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-function getDeliveryLabel(type) {
-  if (type === 'tbilisi') return 'მიწოდება და დაბრუნება თბილისის მასშტაბით (+$25)';
-  if (type === 'outside') return 'მიწოდება / დაბრუნება ქალაქგარეთ / სხვა ქალაქში (+$100)';
-  return 'ოფისიდან წაყვანა და ოფისში დაბრუნება ($0)';
+const FEES = {
+  office: 0,
+  tbilisi: 25,
+  outside: 100
+};
+
+function getPickupTypeLabel(type) {
+  if (type === 'tbilisi') return 'მიწოდება თბილისის მასშტაბით (+$25)';
+  if (type === 'outside') return 'მიწოდება ქალაქგარეთ / სხვა ქალაქში (+$100)';
+  return 'ოფისიდან წაყვანა ($0)';
+}
+
+function getDropoffTypeLabel(type) {
+  if (type === 'tbilisi') return 'დაბრუნება თბილისის მასშტაბით (+$25)';
+  if (type === 'outside') return 'დაბრუნება ქალაქგარეთ / სხვა ქალაქში (+$100)';
+  return 'ოფისში დაბრუნება ($0)';
 }
 
 function getPaymentLabel(method) {
@@ -43,10 +55,30 @@ export async function sendBookingConfirmationEmail(booking, car) {
     ? `${car.brand || ''} ${car.model || ''} ${car.year || ''}`.trim()
     : `Car #${booking.car_id}`;
 
-  const deliveryLabel = getDeliveryLabel(booking.delivery_type);
+  const pickupType = booking.pickup_delivery_type || 'office';
+  const dropoffType = booking.dropoff_delivery_type || 'office';
+
+  const pickupFee = Number(
+    booking.pickup_delivery_fee ?? FEES[pickupType] ?? 0
+  );
+  const dropoffFee = Number(
+    booking.dropoff_delivery_fee ?? FEES[dropoffType] ?? 0
+  );
+  const totalDeliveryFee = Number(
+    booking.delivery_fee ?? pickupFee + dropoffFee
+  );
+  const serviceFee = Number(booking.service_fee || 0);
+  const totalPrice = Number(booking.total_price || 0);
+  const daysCount = Number(booking.total_days || 0);
+  const baseRental =
+    daysCount > 0 && car?.daily_price
+      ? Number((daysCount * Number(car.daily_price)).toFixed(2))
+      : Math.max(0, Number((totalPrice - totalDeliveryFee - serviceFee).toFixed(2)));
+
+  const pickupLabel = getPickupTypeLabel(pickupType);
+  const dropoffLabel = getDropoffTypeLabel(dropoffType);
   const paymentLabel = getPaymentLabel(booking.payment_method);
-  const daysText = booking.total_days ? `${booking.total_days} დღე` : '';
-  const totalPriceText = `$${Number(booking.total_price || 0).toFixed(2)}`;
+  const daysText = daysCount > 0 ? `${daysCount} დღე` : '';
 
   const subject = `ჯავშნის დადასტურება (${booking.booking_code}) — Western - Car Rental`;
 
@@ -56,12 +88,16 @@ export async function sendBookingConfirmationEmail(booking, car) {
     `თქვენი ჯავშანი მიღებულია. დეტალები:`,
     `ჯავშნის კოდი: ${booking.booking_code}`,
     `ავტომობილი: ${carTitle}`,
-    `მიწოდების ტიპი: ${deliveryLabel}`,
-    `აყვანა: ${booking.pickup_date} — ${booking.pickup_location}`,
-    `დაბრუნება: ${booking.dropoff_date} — ${booking.dropoff_location}`,
+    `აყვანა: ${booking.pickup_date} — ${pickupLabel} — ${booking.pickup_location}`,
+    `დაბრუნება: ${booking.dropoff_date} — ${dropoffLabel} — ${booking.dropoff_location}`,
     daysText ? `ხანგრძლივობა: ${daysText}` : null,
     `გადახდის მეთოდი: ${paymentLabel}`,
-    `ჯამური თანხა (10% Service Fee-ს ჩათვლით): ${totalPriceText}`,
+    `--- ფასების დაშლა ---`,
+    `ავტომობილის ქირა: $${baseRental.toFixed(2)}`,
+    `აყვანის მიწოდება (${pickupLabel}): $${pickupFee.toFixed(2)}`,
+    `დაბრუნების მიწოდება (${dropoffLabel}): $${dropoffFee.toFixed(2)}`,
+    `Service Fee (10%): $${serviceFee.toFixed(2)}`,
+    `ჯამური თანხა: $${totalPrice.toFixed(2)}`,
     `სტატუსი: ${booking.status}`,
     ``,
     `მადლობა, რომ ირჩევთ Western - Car Rental-ს.`
@@ -70,10 +106,10 @@ export async function sendBookingConfirmationEmail(booking, car) {
     .join('\n');
 
   const html = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto;">
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 620px; margin: 0 auto;">
       <h2 style="margin-bottom: 8px; color: #111827;">Western - Car Rental</h2>
       <p>გამარჯობა, <strong>${escapeHtml(toName)}</strong>,</p>
-      <p>თქვენი ჯავშანი წარმატებით დარეგისტრირდა. ქვემოთ მოცემულია ჯავშნის დეტალები:</p>
+      <p>თქვენი ჯავშანი წარმატებით დარეგისტრირდა. ქვემოთ მოცემულია ჯავშნისა და ფასების დეტალური დაშლა:</p>
       <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>ჯავშნის კოდი:</strong></td>
@@ -84,16 +120,12 @@ export async function sendBookingConfirmationEmail(booking, car) {
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(carTitle)}</td>
         </tr>
         <tr>
-          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>მიწოდების ტიპი:</strong></td>
-          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(deliveryLabel)}</td>
-        </tr>
-        <tr>
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>აყვანა:</strong></td>
-          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(booking.pickup_date)} — ${escapeHtml(booking.pickup_location)}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(booking.pickup_date)} — <strong>${escapeHtml(pickupLabel)}</strong><br/><span style="color:#4b5563;font-size:13px;">${escapeHtml(booking.pickup_location)}</span></td>
         </tr>
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>დაბრუნება:</strong></td>
-          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(booking.dropoff_date)} — ${escapeHtml(booking.dropoff_location)}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(booking.dropoff_date)} — <strong>${escapeHtml(dropoffLabel)}</strong><br/><span style="color:#4b5563;font-size:13px;">${escapeHtml(booking.dropoff_location)}</span></td>
         </tr>
         ${
           daysText
@@ -108,8 +140,24 @@ export async function sendBookingConfirmationEmail(booking, car) {
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(paymentLabel)}</td>
         </tr>
         <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>ავტომობილის ქირა:</strong></td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">$${escapeHtml(baseRental.toFixed(2))}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>აყვანის მიწოდება:</strong></td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">$${escapeHtml(pickupFee.toFixed(2))}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>დაბრუნების მიწოდება:</strong></td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">$${escapeHtml(dropoffFee.toFixed(2))}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>Service Fee (10%):</strong></td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">$${escapeHtml(serviceFee.toFixed(2))}</td>
+        </tr>
+        <tr>
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>ჯამური თანხა:</strong></td>
-          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>${escapeHtml(totalPriceText)}</strong></td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>$${escapeHtml(totalPrice.toFixed(2))}</strong></td>
         </tr>
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>სტატუსი:</strong></td>

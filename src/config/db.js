@@ -42,8 +42,12 @@ db.exec(`
     customer_phone TEXT NOT NULL,
     pickup_location TEXT NOT NULL,
     dropoff_location TEXT NOT NULL,
+    pickup_delivery_type TEXT NOT NULL DEFAULT 'office',
+    dropoff_delivery_type TEXT NOT NULL DEFAULT 'office',
     delivery_type TEXT NOT NULL DEFAULT 'office',
     payment_method TEXT NOT NULL DEFAULT 'cash',
+    pickup_delivery_fee REAL NOT NULL DEFAULT 0,
+    dropoff_delivery_fee REAL NOT NULL DEFAULT 0,
     delivery_fee REAL NOT NULL DEFAULT 0,
     service_fee REAL NOT NULL DEFAULT 0,
     pickup_date TEXT NOT NULL,
@@ -62,8 +66,12 @@ function ensureBookingColumns() {
   const existing = new Set(cols.map((c) => c.name));
 
   const additions = [
+    ["pickup_delivery_type", "TEXT NOT NULL DEFAULT 'office'"],
+    ["dropoff_delivery_type", "TEXT NOT NULL DEFAULT 'office'"],
     ["delivery_type", "TEXT NOT NULL DEFAULT 'office'"],
     ["payment_method", "TEXT NOT NULL DEFAULT 'cash'"],
+    ["pickup_delivery_fee", "REAL NOT NULL DEFAULT 0"],
+    ["dropoff_delivery_fee", "REAL NOT NULL DEFAULT 0"],
     ["delivery_fee", "REAL NOT NULL DEFAULT 0"],
     ["service_fee", "REAL NOT NULL DEFAULT 0"]
   ];
