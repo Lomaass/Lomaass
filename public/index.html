@@ -30,6 +30,20 @@
       width: 100%;
       flex: 1;
     }
+    .phone-input-group {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+      width: 100%;
+    }
+    .phone-code-select {
+      width: 132px;
+      flex-shrink: 0;
+    }
+    .phone-number-input {
+      flex: 1;
+      min-width: 0;
+    }
     .map-picker-box {
       display: flex;
       flex-direction: column;
@@ -84,7 +98,6 @@
 
       <nav class="nav-actions">
         <button type="button" class="btn btn-ghost" id="openTrackBtn" data-i18n="navTrack">ჯავშნის შემოწმება</button>
-        <button type="button" class="btn btn-ghost" id="openAdminBtn" data-i18n="navAdmin">ადმინი</button>
         <button type="button" class="btn btn-outline" id="langToggle">EN</button>
       </nav>
     </div>
@@ -246,7 +259,31 @@
           </div>
           <div class="field">
             <label for="customerPhoneInput" data-i18n="phone">ტელეფონი *</label>
-            <input type="tel" id="customerPhoneInput" required placeholder="+995 5XX XX XX XX" />
+            <div class="phone-input-group">
+              <select id="phoneCountryCodeInput" class="phone-code-select" aria-label="Country code">
+                <option value="+995" selected>🇬🇪 +995</option>
+                <option value="+1">🇺🇸 +1</option>
+                <option value="+44">🇬🇧 +44</option>
+                <option value="+49">🇩🇪 +49</option>
+                <option value="+33">🇫🇷 +33</option>
+                <option value="+39">🇮🇹 +39</option>
+                <option value="+34">🇪🇸 +34</option>
+                <option value="+48">🇵🇱 +48</option>
+                <option value="+90">🇹🇷 +90</option>
+                <option value="+971">🇦🇪 +971</option>
+                <option value="+374">🇦🇲 +374</option>
+                <option value="+994">🇦🇿 +994</option>
+                <option value="+380">🇺🇦 +380</option>
+                <option value="+7">🇰🇿 +7</option>
+              </select>
+              <input
+                type="tel"
+                id="customerPhoneInput"
+                class="phone-number-input"
+                required
+                placeholder="555 55 55 55"
+              />
+            </div>
           </div>
           <div class="field full-span">
             <label for="customerEmailInput" data-i18n="email">ელ-ფოსტა *</label>

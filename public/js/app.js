@@ -10,7 +10,6 @@ const DELIVERY_OPTIONS = {
 const translations = {
   ka: {
     navTrack: 'ჯავშნის შემოწმება',
-    navAdmin: 'ადმინი',
     heroEyebrow: 'სანდო ავტოპარკი და გამჭვირვალე პირობები',
     heroTitle: 'იქირავეთ ავტომობილი სწრაფად და მარტივად',
     heroSubtitle: 'შეარჩიეთ სასურველი კლასი, გადაამოწმეთ თავისუფალი თარიღები და დაჯავშნეთ წუთებში.',
@@ -51,6 +50,8 @@ const translations = {
     mapNotReadyErr: 'რუკის ბიბლიოთეკა ვერ ჩაიტვირთა. განაახლეთ გვერდი.',
     fullName: 'სახელი და გვარი *',
     phone: 'ტელეფონი *',
+    phonePlaceholder: '555 55 55 55',
+    phoneRequiredErr: 'გთხოვთ შეიყვანოთ ტელეფონის ნომერი.',
     email: 'ელ-ფოსტა *',
     notes: 'დამატებითი შენიშვნა',
     cancel: 'გაუქმება',
@@ -67,7 +68,6 @@ const translations = {
   },
   en: {
     navTrack: 'Track Booking',
-    navAdmin: 'Admin',
     heroEyebrow: 'Reliable fleet & transparent rental terms',
     heroTitle: 'Rent a car quickly and effortlessly',
     heroSubtitle: 'Choose your class, check real-time availability, and book in minutes.',
@@ -108,6 +108,8 @@ const translations = {
     mapNotReadyErr: 'Map library failed to load. Please refresh the page.',
     fullName: 'Full Name *',
     phone: 'Phone *',
+    phonePlaceholder: '555 55 55 55',
+    phoneRequiredErr: 'Please enter your phone number.',
     email: 'Email *',
     notes: 'Additional Notes',
     cancel: 'Cancel',
@@ -168,6 +170,7 @@ const els = {
   mapSelectedSummary: document.getElementById('mapSelectedSummary'),
   confirmMapLocationBtn: document.getElementById('confirmMapLocationBtn'),
   customerNameInput: document.getElementById('customerNameInput'),
+  phoneCountryCodeInput: document.getElementById('phoneCountryCodeInput'),
   customerPhoneInput: document.getElementById('customerPhoneInput'),
   customerEmailInput: document.getElementById('customerEmailInput'),
   notesInput: document.getElementById('notesInput'),
@@ -179,7 +182,6 @@ const els = {
   trackSearchBtn: document.getElementById('trackSearchBtn'),
   trackResult: document.getElementById('trackResult'),
   adminModal: document.getElementById('adminModal'),
-  openAdminBtn: document.getElementById('openAdminBtn'),
   adminKeyInput: document.getElementById('adminKeyInput'),
   loadAdminBtn: document.getElementById('loadAdminBtn'),
   adminMessage: document.getElementById('adminMessage'),
@@ -189,6 +191,33 @@ const els = {
 function t(key, ...args) {
   const val = translations[currentLang][key];
   return typeof val === 'function' ? val(...args) : val;
+}
+
+function getFormattedPhoneNumber() {
+  const code = (els.phoneCountryCodeInput?.value || '+995').trim();
+  let localNumber = (els.customerPhoneInput?.value || '').trim();
+
+  if (!localNumber) return '';
+
+  const normalizedCodeDigits = code.replace(/[^\d]/g, '');
+  const trimmedStart = localNumber.replace(/^[\s()-]+/, '');
+
+  if (trimmedStart.startsWith(code)) {
+    localNumber = trimmedStart.slice(code.length).trim();
+  } else if (trimmedStart.startsWith(`+${normalizedCodeDigits}`)) {
+    localNumber = trimmedStart.slice(normalizedCodeDigits.length + 1).trim();
+  } else if (
+    normalizedCodeDigits &&
+    trimmedStart.startsWith(normalizedCodeDigits) &&
+    trimmedStart.length > normalizedCodeDigits.length + 5
+  ) {
+    localNumber = trimmedStart.slice(normalizedCodeDigits.length).trim();
+  }
+
+  localNumber = localNumber.replace(/^0+/, '').trim();
+  if (!localNumber) return '';
+
+  return `${code} ${localNumber}`;
 }
 
 function applyTranslations() {
@@ -207,6 +236,7 @@ function applyTranslations() {
 
   if (els.pickupLocationInput) els.pickupLocationInput.placeholder = t('pinPlaceholder');
   if (els.dropoffLocationInput) els.dropoffLocationInput.placeholder = t('pinPlaceholder');
+  if (els.customerPhoneInput) els.customerPhoneInput.placeholder = t('phonePlaceholder');
 
   updatePricePreview();
 }
@@ -519,6 +549,7 @@ async function openBooking(carId) {
 
   if (els.deliveryTypeInput) els.deliveryTypeInput.value = 'office';
   if (els.paymentMethodInput) els.paymentMethodInput.value = 'cash';
+  if (els.phoneCountryCodeInput) els.phoneCountryCodeInput.value = '+995';
 
   if (els.filterPickup?.value) els.pickupDateInput.value = els.filterPickup.value;
   if (els.filterDropoff?.value) els.dropoffDateInput.value = els.filterDropoff.value;
@@ -558,6 +589,14 @@ els.bookingForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
   els.bookingMessage.className = 'feedback';
   els.bookingMessage.textContent = '';
+
+  const formattedPhone = getFormattedPhoneNumber();
+  if (!formattedPhone) {
+    els.bookingMessage.className = 'feedback err';
+    els.bookingMessage.textContent = t('phoneRequiredErr');
+    els.customerPhoneInput?.focus();
+    return;
+  }
 
   const deliveryType = els.deliveryTypeInput?.value || 'office';
   const isOffice = deliveryType === 'office';
@@ -632,7 +671,7 @@ els.bookingForm?.addEventListener('submit', async (e) => {
     total_days: calc.diffDays > 0 ? calc.diffDays : undefined,
     total_price: calc.total > 0 ? calc.total : undefined,
     customer_name: els.customerNameInput.value.trim(),
-    customer_phone: els.customerPhoneInput.value.trim(),
+    customer_phone: formattedPhone,
     customer_email: els.customerEmailInput.value.trim(),
     notes: combinedNotes
   };
@@ -655,6 +694,7 @@ els.bookingForm?.addEventListener('submit', async (e) => {
   els.bookingForm.reset();
   if (els.deliveryTypeInput) els.deliveryTypeInput.value = 'office';
   if (els.paymentMethodInput) els.paymentMethodInput.value = 'cash';
+  if (els.phoneCountryCodeInput) els.phoneCountryCodeInput.value = '+995';
   syncDeliveryTypeUI();
   fetchAndRenderCars();
 });
@@ -688,9 +728,19 @@ els.trackSearchBtn?.addEventListener('click', async () => {
   `;
 });
 
-els.openAdminBtn?.addEventListener('click', () => {
-  els.adminModal.classList.remove('hidden');
+function openAdminPanel() {
+  els.adminModal?.classList.remove('hidden');
+}
+
+window.addEventListener('hashchange', () => {
+  if (window.location.hash === '#admin') {
+    openAdminPanel();
+  }
 });
+
+if (window.location.hash === '#admin') {
+  openAdminPanel();
+}
 
 els.loadAdminBtn?.addEventListener('click', async () => {
   const key = els.adminKeyInput.value.trim();
